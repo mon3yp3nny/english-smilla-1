@@ -131,8 +131,18 @@
   td[data-say]:active { background: var(--accent-soft); }
   tr.now td { background: var(--accent-soft); }
   .tour { position: sticky; bottom: calc(14px + env(safe-area-inset-bottom)); text-align: center; margin-top: 16px; pointer-events: none; }
-  .tour .btn { display: inline-block; margin: 0 3px; width: auto; padding: 16px 30px; font-size: 1.2rem; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
-  .tour .btn[hidden] { display: none; }
+  .tour .btn, .st-ctl .btn { display: inline-block; margin: 0 3px; width: auto; padding: 16px 30px; font-size: 1.2rem; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
+  .tour .btn[hidden], .st-ctl .btn[hidden], .stage[hidden] { display: none; }
+  /* Vollbild beim Vorlesen: das gerade gesprochene Wort steht groß in der Mitte */
+  .stage { position: fixed; inset: 0; z-index: 10; background: var(--bg); display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: calc(18px + env(safe-area-inset-top)) 20px calc(22px + env(safe-area-inset-bottom)); }
+  .stage .x { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 12px; font-size: 1.8rem; }
+  .st-count { color: var(--muted); font-weight: 700; }
+  .st-body { flex: 1; display: flex; flex-direction: column; justify-content: center; width: 100%; }
+  .st-top { font-size: min(5vh, 6.5vw); font-weight: 700; color: var(--muted); margin-bottom: 3vh; }
+  .st-line { font-weight: 800; line-height: 1.2; white-space: nowrap; }
+  .st-top.on, .st-line.on { color: var(--accent); }
+  .st-line.off { visibility: hidden; }
   tr.done td:first-child::after { content: " ✓"; color: var(--ok); }
   .link { border: 0; background: none; color: var(--muted); text-decoration: underline; font-size: .85rem; padding: 8px; }
 </style>
@@ -343,7 +353,7 @@ const example = v => {
   return [v[0] === "be" ? "am" : f(0), f(1), "have " + f(2)].map(t => "I " + t);
 };
 
-const VERSION = 13;
+const VERSION = 14;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -459,13 +469,36 @@ function home() {
 }
 
 // ---------- Liste ----------
-// "Alle vorlesen": deutsches Wort, die drei Formen, dann ein Beispiel ("ich bin" – "I am, I was, I have been"), kurze Pause, nächstes Verb
+// "Alle vorlesen": je Verb zwei Vollbild-Seiten – deutsches Wort mit den drei Formen,
+// dann ein Beispiel ("ich bin" – "I am", "I was", "I have been"). Jede Zeile hat ihre eigene Aufnahme.
 let tour = 0, tourAt = 0, tourTimer;   // tour = Nummer des laufenden Durchgangs (0 = aus), tourAt = aktuelles Verb
+let stageOpen = false, wake = null;
+// Seite: [deutsche Überschrift, Datei dazu, [[Anzeige, Datei, Text für die Browser-Stimme], ...]]
+const pages = v => [
+  [v[3], "de", [0, 1, 2].map(i => [disp(v[i]), i, v[i]])],
+  [v[4], "ich", example(v).map((t, i) => [t, "ex" + i, t])]
+];
+// Bildschirm bleibt an, solange vorgelesen wird (wo der Browser das kann)
+function keepAwake(on) {
+  try {
+    if (on) navigator.wakeLock.request("screen").then(w => { if (tour) wake = w; else w.release(); }, () => {});
+    else if (wake) { wake.release(); wake = null; }
+  } catch (e) {}
+}
 function tourUI() {
-  const b = document.getElementById("tour"), r = document.getElementById("tourReset");
-  if (!b) return;
-  b.textContent = tour ? "⏸ Pause" : tourAt ? "▶️ Weiter" : "▶️ Alle vorlesen";
-  r.hidden = !!tour || !tourAt;
+  app.querySelectorAll("[data-tour=toggle]").forEach(b => b.textContent = tour ? "⏸ Pause" : tourAt ? "▶️ Weiter" : "▶️ Alle vorlesen");
+  app.querySelectorAll("[data-tour=reset]").forEach(b => b.hidden = !!tour || !tourAt);
+  const st = document.getElementById("stage");
+  if (st) st.hidden = !stageOpen;
+}
+// k = Zeile, die gerade gesprochen wird (-1 = die deutsche Überschrift); spätere Zeilen sind noch unsichtbar
+function showStage(i, p, k) {
+  const [top, , lines] = pages(VERBS[i])[p], len = Math.max(...lines.map(l => l[0].length));
+  document.getElementById("stCount").textContent = `${i + 1} / ${VERBS.length}`;
+  const body = document.getElementById("stBody");
+  body.style.fontSize = `min(14vh, ${Math.min(24, 170 / len).toFixed(1)}vw)`;
+  body.innerHTML = `<div class="st-top ${k < 0 ? "on" : ""}">${top}</div>` +
+    lines.map((l, j) => `<div class="st-line ${j === k ? "on" : j > k ? "off" : ""}">${l[0]}</div>`).join("");
 }
 // Pause merkt sich das Verb; "Weiter" fängt bei diesem Verb wieder an
 function pauseTour() {
@@ -473,10 +506,11 @@ function pauseTour() {
   tour = 0; clearTimeout(tourTimer);
   player.onended = null; player.pause();
   if ("speechSynthesis" in window) speechSynthesis.cancel();
+  keepAwake(false);
   tourUI();
 }
 function resetTour() {
-  pauseTour(); tourAt = 0;
+  pauseTour(); tourAt = 0; stageOpen = false;
   app.querySelectorAll("tr.now").forEach(r => r.classList.remove("now"));
   tourUI();
 }
@@ -489,12 +523,22 @@ function startTour() {
     const v = VERBS[i];
     tourAt = i;
     rows[i].classList.add("now");
-    rows[i].scrollIntoView({ block: "center", behavior: "smooth" });
-    // [Datei, Text für die Browser-Stimme, Sprache, Pause danach]
-    const clips = [["de", v[3], "de-DE", 400], ["all", verbAudio(v).sayText, "", 800], ["ich", v[4], "de-DE", 400], ["ex", example(v).join(", "), "", 1300]];
-    const run = k => k >= clips.length ? step(i + 1) : play(vAudio(v, clips[k][0]), clips[k][1], wait(clips[k][3], () => run(k + 1)), clips[k][2]);
+    rows[i].scrollIntoView({ block: "center" });
+    // [Seite, Zeile, Datei, Text für die Browser-Stimme, Sprache, Pause danach]
+    const clips = pages(v).flatMap(([top, file, lines], p) => [
+      [p, -1, file, top, "de-DE", 400],
+      ...lines.map((l, k) => [p, k, l[1], l[2], "", k < 2 ? 350 : p ? 1400 : 900])
+    ]);
+    const run = n => {
+      if (n >= clips.length) return step(i + 1);
+      const [p, k, file, text, lang, gap] = clips[n];
+      showStage(i, p, k);
+      play(vAudio(v, file), text, wait(gap, () => run(n + 1)), lang);
+    };
     run(0);
   };
+  stageOpen = true;
+  keepAwake(true);
   step(tourAt);
   tourUI();
 }
@@ -502,16 +546,22 @@ function startTour() {
 function list() {
   app.innerHTML = `
     <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
-    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst du alle Verben nacheinander – mit Pause-Taste.</p>
+    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste.</p>
     <table>
       <tr><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
       ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}">${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
     </table>
-    <div class="tour"><button class="btn ghost" id="tourReset" hidden>⏮ Von vorn</button><button class="btn" id="tour">▶️ Alle vorlesen</button></div>`;
-  tourAt = 0;
+    <div class="tour"><button class="btn ghost" data-tour="reset" hidden>⏮ Von vorn</button><button class="btn" data-tour="toggle">▶️ Alle vorlesen</button></div>
+    <div class="stage" id="stage" hidden>
+      <button class="x" data-tour="close" aria-label="Schließen">✕</button>
+      <div class="st-count" id="stCount"></div>
+      <div class="st-body" id="stBody"></div>
+      <div class="st-ctl"><button class="btn ghost" data-tour="reset" hidden>⏮ Von vorn</button><button class="btn" data-tour="toggle"></button></div>
+    </div>`;
+  tourAt = 0; stageOpen = false;
   document.getElementById("back").onclick = () => { resetTour(); home(); };
-  document.getElementById("tour").onclick = () => tour ? pauseTour() : startTour();
-  document.getElementById("tourReset").onclick = resetTour;
+  const act = { toggle: () => tour ? pauseTour() : startTour(), reset: () => { resetTour(); startTour(); }, close: () => { pauseTour(); stageOpen = false; tourUI(); } };
+  app.querySelectorAll("[data-tour]").forEach(b => b.onclick = act[b.dataset.tour]);
   window.scrollTo(0, 0);
 }
 

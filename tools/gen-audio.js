@@ -15,10 +15,9 @@ for (const v of VERBS) {
   forms.forEach((t, i) => jobs.push([`v/${slug(v[0])}-${i}`, { text: t }]));
   jobs.push([`v/${slug(v[0])}-all`, { ssml: `<speak>${forms.join('<break time="400ms"/>')}</speak>` }]);
   // deutsche Bedeutung und Beispiel ("ich bin" – "I am, I was, I have been") für "Alle vorlesen" in der Liste
-  jobs.push([`v/${slug(v[0])}-ich`, { text: v[4] }, VOICE_DE]);
-  const ex = example(v).map((t, i) => v[0] === "read" && i > 0 ? t.replace(/read$/, "red") : t);
-  jobs.push([`v/${slug(v[0])}-ex`, { ssml: `<speak>${ex.join('<break time="400ms"/>')}</speak>` }]);
   jobs.push([`v/${slug(v[0])}-de`, { text: v[3].replace(/[()]/g, "").replace(/;/g, ",") }, VOICE_DE]);
+  jobs.push([`v/${slug(v[0])}-ich`, { text: v[4] }, VOICE_DE]);
+  example(v).forEach((t, i) => jobs.push([`v/${slug(v[0])}-ex${i}`, { text: v[0] === "read" && i > 0 ? t.replace(/read$/, "red") : t }]));
 }
 for (const s of [...WAS_WERE.map(s => plain(s[0], s[1])), ...SENTENCES.map(s => plain(s[0], s[2]))])
   jobs.push([`s/${slug(s)}`, { text: s.replace("She read three", "She red three") }]);
