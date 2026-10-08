@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Englisch">
+<link rel="apple-touch-icon" href="icon.png">
 <title>Englisch-Trainer: Irregular Verbs</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦝</text></svg>">
 <style>
@@ -85,6 +86,7 @@
   .q .head.sentence { font-size: 1.3rem; font-weight: 600; }
   .q .sub { color: var(--muted); margin-top: 6px; }
   .say { border: 0; background: var(--accent-soft); border-radius: 99px; padding: 4px 10px; margin-left: 6px; font-size: 1rem; vertical-align: middle; }
+  .say.big { font-size: 1.3rem; font-weight: 700; padding: 14px 28px; margin: 0; color: var(--accent); }
   .blank { display: inline-block; min-width: 64px; border-bottom: 3px solid var(--accent); color: var(--accent); font-weight: 800; padding: 0 4px; }
   .hint { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 8px; padding: 2px 10px; font-weight: 700; }
 
@@ -295,7 +297,7 @@ const plain = (sentence, answer) => {
   return sentence.replace(" (not)", "").replace("___", word);
 };
 
-const VERSION = 2;
+const VERSION = 3;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -364,7 +366,8 @@ function home() {
   const modes = [
     ["cards", "🃏", "Karteikarten", "Anschauen, aufdecken, merken"],
     ["write", "✍️", "Formen schreiben", "Du tippst die Formen selbst ein"],
-    ["quiz", "🎯", "Quiz", "Vier Antworten – welche stimmt?"]
+    ["quiz", "🎯", "Quiz", "Vier Antworten – welche stimmt?"],
+    ["listen", "🎧", "Hören & schreiben", "Du hörst die Simple-Past-Form und schreibst sie"]
   ];
   const grammar = [
     ["waswere", "🔀", "was oder were?", "to be im Simple Past"],
@@ -447,6 +450,11 @@ function build(mode) {
     fields: [{ label: "Simple Past (2. Form)", answer: v[1], needAll: v[0] === "be" }]
       .concat(store.pp ? [{ label: "Past Participle (3. Form)", answer: v[2] }] : [])
   }));
+  if (mode === "listen") return pickVerbs().map(v => ({
+    type: "input", listen: true, verb: v, ...verbAudio(v), sub: v[3], solution: solution(v),
+    head: `<button type="button" class="say big" data-audio="${vAudio(v, 1)}" data-say="${v[1]}">🔊 Anhören</button>`,
+    fields: [{ label: "Welche Simple-Past-Form hörst du?", answer: v[1], needAll: v[0] === "be" }]
+  }));
   if (mode === "waswere") return shuffle(WAS_WERE).slice(0, SESSION_LEN).map(s => ({
     type: "choice", sentence: true, ...sentenceAudio(s[0], s[1]), head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
     sub: "Was passt in die Lücke?", options: ["was", "were", "wasn't", "weren't"], answer: s[1], solution: fill(s[0], s[1])
@@ -466,6 +474,7 @@ function build(mode) {
 let S;
 function start(mode) {
   S = { mode, qs: build(mode), i: 0, right: 0, wrong: [] };
+  S.total = S.qs.length;
   showQ();
 }
 
@@ -490,6 +499,7 @@ function showQ() {
       <span class="count">${S.i + 1} / ${S.qs.length}</span>
     </div>
     <div class="card q">
+      ${q.retry ? '<div class="hint" style="margin-bottom:12px">🔁 Nochmal</div>' : ""}
       <div class="head ${q.sentence ? "sentence" : ""}">${q.head}${q.say ? sayBtn(vAudio(q.verb, 0), q.say) : ""}</div>
       <div class="sub">${q.sub}</div>
       <div id="extra"></div>
@@ -501,6 +511,7 @@ function showQ() {
   if (q.type === "input") {
     const inputs = [...app.querySelectorAll("input[type=text]")];
     inputs[0].focus();
+    if (q.listen) play(vAudio(q.verb, 1), q.verb[1]);
     document.getElementById("f").onsubmit = e => {
       e.preventDefault();
       const empty = inputs.find(i => !i.value.trim());
@@ -541,8 +552,11 @@ function showQ() {
 
 function record(ok) {
   const q = S.qs[S.i];
-  if (ok) S.right++; else S.wrong.push(q.solution);
-  if (q.verb) { store.p[q.verb[0]] = ok ? streak(q.verb) + 1 : 0; save(); }
+  // Falsche Antworten kommen am Ende der Runde noch einmal dran; gewertet wird nur der erste Versuch
+  if (!q.retry) {
+    if (ok) S.right++; else { S.wrong.push(q.solution); S.qs.push({ ...q, retry: true }); }
+  }
+  if (q.verb && !(q.retry && ok)) { store.p[q.verb[0]] = ok ? streak(q.verb) + 1 : 0; save(); }
 }
 
 function grade(ok) {
@@ -564,7 +578,7 @@ function next() {
 }
 
 function result() {
-  const total = S.qs.length, r = S.right;
+  const total = S.total || S.qs.length, r = S.right;
   store.session = null; save();
   const msg = r === total ? "Alles richtig – stark! 🏆" : r >= total * 0.7 ? "Richtig gut! ⭐" : r >= total * 0.4 ? "Schon ganz ordentlich – weiter so! 💪" : "Übung macht den Meister – gleich nochmal! 🌱";
   app.innerHTML = `

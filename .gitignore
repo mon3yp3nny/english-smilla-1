@@ -2,3 +2,4 @@
 # Fotos der Schulbuchseiten nicht veröffentlichen
 *.jpeg
 *.jpg
+.claude/
