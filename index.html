@@ -353,7 +353,7 @@ const example = v => {
   return [v[0] === "be" ? "am" : f(0), f(1), "have " + f(2)].map(t => "I " + t);
 };
 
-const VERSION = 14;
+const VERSION = 15;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -365,6 +365,8 @@ store.range = store.range || 0;
 store.pp = !!store.pp;
 if (store.sound === undefined) store.sound = true;
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+// Bittet den Browser, den Fortschritt auch bei wenig Speicherplatz nicht zu löschen
+try { navigator.storage.persist().catch(() => {}); } catch (e) {}
 
 // ---------- Helfer ----------
 const app = document.getElementById("app");
