@@ -1,7 +1,7 @@
 // Erzeugt die MP3s in audio/ mit Google Cloud Text-to-Speech.
 // Aufruf: node tools/gen-audio.js   (braucht gcloud-Login; überspringt vorhandene Dateien)
 const fs = require("fs"), path = require("path"), { execSync } = require("child_process");
-const PROJECT = "hb-push-fischbek", VOICE = "en-GB-Neural2-A";
+const PROJECT = "hb-push-fischbek", VOICE = "en-GB-Neural2-A", VOICE_DE = "de-DE-Neural2-C";
 const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const data = html.match(/<script>([\s\S]*?)\/\/ -+ Speicher/)[1];
@@ -14,6 +14,8 @@ for (const v of VERBS) {
   const forms = [0, 1, 2].map(i => spoken(v, i));
   forms.forEach((t, i) => jobs.push([`v/${slug(v[0])}-${i}`, { text: t }]));
   jobs.push([`v/${slug(v[0])}-all`, { ssml: `<speak>${forms.join('<break time="400ms"/>')}</speak>` }]);
+  // deutsche Bedeutung für "Alle vorlesen" in der Liste
+  jobs.push([`v/${slug(v[0])}-de`, { text: v[3].replace(/[()]/g, "").replace(/;/g, ",") }, VOICE_DE]);
 }
 for (const s of [...WAS_WERE.map(s => plain(s[0], s[1])), ...SENTENCES.map(s => plain(s[0], s[2]))])
   jobs.push([`s/${slug(s)}`, { text: s.replace("She read three", "She red three") }]);
@@ -21,14 +23,14 @@ for (const s of [...WAS_WERE.map(s => plain(s[0], s[1])), ...SENTENCES.map(s => 
 (async () => {
   const token = execSync("gcloud auth print-access-token").toString().trim();
   let made = 0;
-  for (const [name, input] of jobs) {
+  for (const [name, input, voice = VOICE] of jobs) {
     const file = path.join(root, "audio", name + ".mp3");
     if (fs.existsSync(file)) continue;
     fs.mkdirSync(path.dirname(file), { recursive: true });
     const res = await fetch("https://texttospeech.googleapis.com/v1/text:synthesize", {
       method: "POST",
       headers: { Authorization: "Bearer " + token, "x-goog-user-project": PROJECT, "Content-Type": "application/json" },
-      body: JSON.stringify({ input, voice: { languageCode: "en-GB", name: VOICE }, audioConfig: { audioEncoding: "MP3", speakingRate: 0.9, sampleRateHertz: 24000 } })
+      body: JSON.stringify({ input, voice: { languageCode: voice.slice(0, 5), name: voice }, audioConfig: { audioEncoding: "MP3", speakingRate: 0.9, sampleRateHertz: 24000 } })
     });
     if (!res.ok) { console.error(name, res.status, await res.text()); process.exit(1); }
     fs.writeFileSync(file, Buffer.from((await res.json()).audioContent, "base64"));

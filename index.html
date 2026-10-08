@@ -129,6 +129,9 @@
   td.de { color: var(--muted); }
   tr[data-say] { cursor: pointer; }
   td[data-say]:active { background: var(--accent-soft); }
+  tr.now td { background: var(--accent-soft); }
+  .tour { position: sticky; bottom: calc(14px + env(safe-area-inset-bottom)); text-align: center; margin-top: 16px; pointer-events: none; }
+  .tour .btn { width: auto; padding: 16px 30px; font-size: 1.2rem; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
   tr.done td:first-child::after { content: " ✓"; color: var(--ok); }
   .link { border: 0; background: none; color: var(--muted); text-decoration: underline; font-size: .85rem; padding: 8px; }
 </style>
@@ -334,7 +337,7 @@ const plain = (sentence, answer) => {
   return sentence.replace(" (not)", "").replace("___", word);
 };
 
-const VERSION = 11;
+const VERSION = 12;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -372,17 +375,20 @@ function check(input, form, needAll) {
 
 // Spielt die MP3 ab; falls das nicht klappt, liest die Browser-Stimme vor
 const player = new Audio();
-function play(file, text) {
+// done (optional) wird aufgerufen, sobald fertig vorgelesen ist
+function play(file, text, done, lang) {
   if ("speechSynthesis" in window) speechSynthesis.cancel();
-  player.onerror = () => speak(text);
+  player.onended = done || null;
+  player.onerror = () => speak(text, done, lang);
   player.src = `audio/${file}.mp3`;
   const p = player.play();
   if (p) p.catch(() => {});
 }
-function speak(text) {
-  if (!text || !("speechSynthesis" in window)) return;
+function speak(text, done, lang) {
+  if (!text || !("speechSynthesis" in window)) { if (done) done(); return; }
   const u = new SpeechSynthesisUtterance(text.replace(/[()\/]/g, " "));
-  u.lang = "en-GB"; u.rate = 0.9;
+  u.lang = lang || "en-GB"; u.rate = 0.9;
+  if (done) u.onend = u.onerror = done;
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 const vAudio = (v, i) => `v/${slug(v[0])}-${i}`;
@@ -394,7 +400,7 @@ const fill = (sentence, word) => {
 
 app.addEventListener("click", e => {
   const b = e.target.closest("[data-say]");
-  if (b) { e.stopPropagation(); play(b.dataset.audio, b.dataset.say); }
+  if (b) { e.stopPropagation(); stopTour(); play(b.dataset.audio, b.dataset.say); }
 });
 
 // ---------- Startseite ----------
@@ -447,15 +453,43 @@ function home() {
 }
 
 // ---------- Liste ----------
+// "Alle vorlesen": erst das deutsche Wort, dann die drei Formen, kurze Pause, nächstes Verb
+let tour = 0, tourTimer;   // tour = Nummer des laufenden Durchgangs, 0 = aus
+function stopTour() {
+  if (!tour) return;
+  tour = 0; clearTimeout(tourTimer);
+  player.onended = null; player.pause();
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  app.querySelectorAll("tr.now").forEach(r => r.classList.remove("now"));
+  const b = document.getElementById("tour");
+  if (b) b.textContent = "▶️ Alle vorlesen";
+}
+function startTour() {
+  const id = tour = Date.now(), rows = [...app.querySelectorAll("tr[data-say]")];
+  const wait = (ms, fn) => () => { if (tour === id) tourTimer = setTimeout(() => { if (tour === id) fn(); }, ms); };
+  const step = i => {
+    rows.forEach(r => r.classList.remove("now"));
+    if (i >= VERBS.length) return stopTour();
+    const v = VERBS[i];
+    rows[i].classList.add("now");
+    rows[i].scrollIntoView({ block: "center", behavior: "smooth" });
+    play(vAudio(v, "de"), v[3], wait(400, () => play(vAudio(v, "all"), verbAudio(v).sayText, wait(1300, () => step(i + 1)))), "de-DE");
+  };
+  document.getElementById("tour").textContent = "⏹ Stopp";
+  step(0);
+}
+
 function list() {
   app.innerHTML = `
     <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
-    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen.</p>
+    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst du alle Verben nacheinander.</p>
     <table>
       <tr><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
       ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}">${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
-    </table>`;
-  document.getElementById("back").onclick = home;
+    </table>
+    <div class="tour"><button class="btn" id="tour">▶️ Alle vorlesen</button></div>`;
+  document.getElementById("back").onclick = () => { stopTour(); home(); };
+  document.getElementById("tour").onclick = () => tour ? stopTour() : startTour();
   window.scrollTo(0, 0);
 }
 
