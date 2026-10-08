@@ -100,6 +100,7 @@
   input[type=text]:focus { border-color: var(--accent); }
   input.ok { border-color: var(--ok); background: var(--ok-soft); }
   input.bad { border-color: var(--bad); background: var(--bad-soft); }
+  .fix { color: var(--bad); font-size: .95rem; margin-top: 4px; }
 
   .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
   .opt { padding: 16px 10px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); font-weight: 700; font-size: 1.05rem; }
@@ -126,6 +127,8 @@
   td { padding: 8px 4px; border-top: 1px solid var(--line); vertical-align: top; }
   td:first-child { font-weight: 700; }
   td.de { color: var(--muted); }
+  tr[data-say] { cursor: pointer; }
+  td[data-say]:active { background: var(--accent-soft); }
   tr.done td:first-child::after { content: " ✓"; color: var(--ok); }
   .link { border: 0; background: none; color: var(--muted); text-decoration: underline; font-size: .85rem; padding: 8px; }
 </style>
@@ -164,7 +167,7 @@ const VERBS = [
   ["go","went","gone","gehen; fahren"],
   ["grow","grew","grown","wachsen; anbauen; züchten"],
 
-  ["hang out (with)","hung out (with)","hung out (with)","rumhängen (mit); sich treffen (mit)"],
+  ["hang out (with)","hung out (with)","hung out (with)","rumhängen (mit); sich treffen (mit); sich herumtreiben (mit)"],
   ["have","had","had","haben; essen"],
   ["hear","heard","heard","hören"],
   ["hold","held","held","halten; festhalten; tragen"],
@@ -279,6 +282,39 @@ const SENTENCES = [
   ["He ___ the ball to me.", "throw", "threw"],
   ["I ___ sick after the roller coaster.", "feel", "felt"],
   ["They ___ their old house last year.", "sell", "sold"],
+  ["She ___ a famous singer in 2020.", "become", "became"],
+  ["I ___ the red T-shirt, not the blue one.", "choose", "chose"],
+  ["Mum ___ the cake into eight pieces.", "cut", "cut"],
+  ["My dad ___ us to school yesterday.", "drive", "drove"],
+  ["We ___ the ducks in the park.", "feed", "fed"],
+  ["My brothers ___ about the last biscuit.", "fight", "fought"],
+  ["The lake ___ last winter.", "freeze", "froze"],
+  ["I ___ a new bike for my birthday.", "get", "got"],
+  ["My grandpa ___ tomatoes in his garden last year.", "grow", "grew"],
+  ["On Saturday I ___ my friends.", "hang out with", "hung out with"],
+  ["We ___ a strange noise last night.", "hear", "heard"],
+  ["She ___ the baby in her arms.", "hold", "held"],
+  ["I fell and ___ my arm.", "hurt", "hurt"],
+  ["He ___ the old photos in a box.", "keep", "kept"],
+  ["We ___ a lot of new words last week.", "learn", "learnt/learned"],
+  ["My parents ___ me stay up late on Saturday.", "let", "let"],
+  ["Sorry, I ___ Tuesday, not Thursday.", "mean", "meant"],
+  ["Dad ___ for the ice cream.", "pay", "paid"],
+  ["I ___ my keys on the table.", "put", "put"],
+  ["She ___ her horse on the beach.", "ride", "rode"],
+  ["He ___ goodbye and went home.", "say", "said"],
+  ["I ___ my grandma a postcard from Spain.", "send", "sent"],
+  ["The dog ___ the water off its coat.", "shake", "shook"],
+  ["She ___ me her new phone.", "show", "showed"],
+  ["The Titanic ___ in 1912.", "sink", "sank"],
+  ["We ___ and started the test.", "sit down", "sat down"],
+  ["The kitchen ___ of fresh bread.", "smell", "smelt/smelled"],
+  ["I ___ my name for the teacher.", "spell", "spelt/spelled"],
+  ["We ___ two weeks in Italy last summer.", "spend", "spent"],
+  ["They ___ in the rain for an hour.", "stand", "stood"],
+  ["He ___ a poster on the wall.", "stick", "stuck"],
+  ["I ___ every word of the story.", "understand", "understood"],
+  ["I ___ at seven o'clock this morning.", "wake up", "woke up"],
   ["I ___ to school yesterday.", "not / go", "didn't go/did not go"],
   ["She ___ her lunch.", "not / eat", "didn't eat/did not eat"],
   ["We ___ the film.", "not / see", "didn't see/did not see"],
@@ -298,7 +334,7 @@ const plain = (sentence, answer) => {
   return sentence.replace(" (not)", "").replace("___", word);
 };
 
-const VERSION = 4;
+const VERSION = 11;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -327,7 +363,7 @@ function expand(form) {
 }
 // needAll: alle Alternativen müssen genannt werden (was UND were)
 function check(input, form, needAll) {
-  const alts = expand(form), n = norm(input);
+  const alts = expand(form), n = norm(input).replace(/^to /, "");
   if (!n) return false;
   if (!needAll && alts.includes(n)) return true;
   const parts = n.split(/[,\/]|\s+/).filter(p => p && !["and", "or", "und", "oder"].includes(p));
@@ -367,6 +403,7 @@ function home() {
   const modes = [
     ["cards", "🃏", "Karteikarten", "Anschauen, aufdecken, merken"],
     ["write", "✍️", "Formen schreiben", "Du tippst die Formen selbst ein"],
+    ["vocab", "🇩🇪", "Deutsch → Englisch", "Du siehst das deutsche Wort und schreibst das Verb"],
     ["quiz", "🎯", "Quiz", "Vier Antworten – welche stimmt?"],
     ["listen", "🎧", "Hören & schreiben", "Du hörst die Simple-Past-Form und schreibst sie"]
   ];
@@ -389,10 +426,12 @@ function home() {
     ${modes.map(btn).join("")}
     <div class="section">Grammatik</div>
     ${grammar.map(btn).join("")}
+    <div class="section">Alles gemischt</div>
+    ${btn(["exam", "🏁", "Probe-Arbeit", "to be, Verbformen und Sätze in einer Runde"])}
     <div class="section">Nachschlagen</div>
     <button class="mode" data-mode="list"><span class="ico">📖</span><span><b>Alle Verben</b><span class="muted">Die ganze Liste zum Nachlesen</span></span></button>
     <div class="section">Einstellungen</div>
-    <label class="check"><input type="checkbox" id="pp" ${store.pp ? "checked" : ""}> Bei „Formen schreiben“ auch die 3. Form (past participle) abfragen</label>
+    <label class="check"><input type="checkbox" id="pp" ${store.pp ? "checked" : ""}> Beim Schreiben auch die 3. Form (past participle) abfragen</label>
     <label class="check"><input type="checkbox" id="sound" ${store.sound ? "checked" : ""}> Lösung nach jeder Antwort vorlesen 🔊</label>
     <p class="center" style="margin-top:20px"><button class="link" id="reset">Fortschritt zurücksetzen</button></p>
     <p class="center muted">Version ${VERSION} · <button class="link" id="reload">🔄 Neu laden</button></p>`;
@@ -411,33 +450,69 @@ function home() {
 function list() {
   app.innerHTML = `
     <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
+    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen.</p>
     <table>
       <tr><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
-      ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""}"><td>${v[0]}</td><td>${disp(v[1])}</td><td>${disp(v[2])}</td><td class="de">${v[3]}</td></tr>`).join("")}
+      ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}">${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
     </table>`;
   document.getElementById("back").onclick = home;
   window.scrollTo(0, 0);
 }
 
 // ---------- Fragen bauen ----------
-// Schwächste Verben zuerst, bei Gleichstand zufällig
-const pickVerbs = () => shuffle(pool()).sort((a, b) => streak(a) - streak(b)).slice(0, SESSION_LEN);
+// Zuerst die zuletzt falsch beantworteten Verben, dann die neuen, dann die schon gekonnten; bei Gleichstand zufällig
+const rank = v => store.p[v[0]] === 0 ? -1 : streak(v);
+const pickVerbs = () => shuffle(pool()).sort((a, b) => rank(a) - rank(b)).slice(0, SESSION_LEN);
 const solution = v => `${v[0]} – ${disp(v[1])} – ${disp(v[2])}`;
 const verbAudio = v => ({ audio: vAudio(v, "all"), sayText: `${v[0]}, ${v[1]}, ${v[2]}` });
 const sentenceAudio = (s, answer) => ({ audio: "s/" + slug(plain(s, answer)), sayText: plain(s, answer) });
 
+// Eselsbrücken: Verben, die sich gleich verhalten
+const PATTERNS = [
+  [v => v[0] === v[1] && v[1] === v[2], "Alle drei Formen werden gleich geschrieben"],
+  [v => /ought$/.test(v[1]), "2. und 3. Form enden auf -ought"],
+  [v => v[0].includes("i") && v[1] === v[0].replace("i", "a") && v[2] === v[0].replace("i", "u"), "Aus i wird a und dann u"],
+  [v => /ew$/.test(v[1]) && /wn$/.test(v[2]), "2. Form mit -ew, 3. Form mit -wn"],
+  [v => v[2] === v[0], "Die 3. Form ist wie die Grundform"],
+  [v => v[1] === v[2], "2. und 3. Form sind gleich"]
+];
+function verbTip(v) {
+  if (v[0] === "read") return "Merke: Alle drei Formen werden gleich geschrieben – aber die 2. und 3. Form spricht man wie <b>red</b>.";
+  const i = PATTERNS.findIndex(p => p[0](v));
+  if (i < 0) return "";
+  const like = i === PATTERNS.length - 1 ? [] : VERBS.filter(o => o !== v && PATTERNS.findIndex(p => p[0](o)) === i).slice(0, 3);
+  return `Merke: ${PATTERNS[i][1]}${like.length ? " – wie bei <b>" + like.map(o => o[0]).join(", ") + "</b>" : ""}.`;
+}
+
+// Erklärt typische Verwechslungen, damit klar wird, was schiefging
+function mistake(val, f, v) {
+  if (!v || !f.kind) return "";
+  if (f.kind === "inf") {
+    const o = VERBS.find(o => o[0] !== v[0] && check(val, o[0]));
+    return o ? `„${o[0]}“ heißt ${o[3]}.` : "";
+  }
+  if (f.kind === "past") {
+    if (v[1] !== v[2] && check(val, v[2])) return "Das ist die 3. Form.";
+    if (v[1] !== v[0] && check(val, v[0])) return "Das ist die Grundform.";
+    if (norm(val) === fakeRegular(v)) return "Dieses Verb ist unregelmäßig – ohne -ed!";
+  }
+  if (f.kind === "pp" && v[1] !== v[2] && check(val, v[1])) return "Das ist die 2. Form.";
+  return "";
+}
+
 function fakeRegular(v) {
   const words = v[0].replace(/ \(.*\)/, "").split(" ");
-  words[0] += words[0].endsWith("e") ? "d" : "ed";
+  words[0] += words[0].length > 2 && words[0].endsWith("e") ? "d" : "ed";
   return words.join(" ");
 }
 
 function quizQuestion(v) {
   if (Math.random() < 0.6) {
-    const opts = new Set([disp(v[1]), fakeRegular(v)]);
+    const opts = new Set([disp(v[1])]), fake = fakeRegular(v);
+    if (!expand(v[1]).includes(fake)) opts.add(fake);   // "learned" wäre ja richtig
     if (v[2] !== v[1]) opts.add(disp(v[2]));
     for (const o of shuffle(VERBS)) { if (opts.size >= 4) break; opts.add(disp(o[1])); }
-    return { type: "choice", verb: v, ...verbAudio(v), head: v[0], say: v[0], sub: `${v[3]}<br>Wie heißt das <b>Simple Past</b>?`, options: shuffle([...opts]), answer: disp(v[1]), solution: solution(v) };
+    return { type: "choice", verb: v, ...verbAudio(v), tip: verbTip(v), head: v[0], say: v[0], sub: `${v[3]}<br>Wie heißt das <b>Simple Past</b>?`, options: shuffle([...opts]), answer: disp(v[1]), solution: solution(v) };
   }
   const tokens = v[3].split("; ");
   const others = shuffle(VERBS).filter(o => o !== v && !o[3].split("; ").some(t => tokens.includes(t))).slice(0, 3);
@@ -445,31 +520,41 @@ function quizQuestion(v) {
 }
 
 function build(mode) {
-  if (mode === "cards") return pickVerbs().map(v => ({ type: "card", verb: v, ...verbAudio(v), head: v[0], say: v[0], sub: v[3], solution: solution(v) }));
+  if (mode === "cards") return pickVerbs().map(v => ({ type: "card", tip: verbTip(v), verb: v, ...verbAudio(v), head: v[0], say: v[0], sub: v[3], solution: solution(v) }));
   if (mode === "quiz") return pickVerbs().map(quizQuestion);
   if (mode === "write") return pickVerbs().map(v => ({
-    type: "input", verb: v, ...verbAudio(v), head: v[0], say: v[0], sub: v[3], solution: solution(v),
-    fields: [{ label: "Simple Past (2. Form)", answer: v[1], needAll: v[0] === "be" }]
-      .concat(store.pp ? [{ label: "Past Participle (3. Form)", answer: v[2] }] : [])
+    type: "input", tip: verbTip(v), verb: v, ...verbAudio(v), head: v[0], say: v[0], sub: v[3], solution: solution(v),
+    fields: [{ kind: "past", label: "Simple Past (2. Form)", answer: v[1], needAll: v[0] === "be" }]
+      .concat(store.pp ? [{ kind: "pp", label: "Past Participle (3. Form)", answer: v[2] }] : [])
+  }));
+  if (mode === "exam") {
+    const sent = shuffle(SENTENCES), special = s => s[1].includes("/");   // immer auch eine Verneinung oder Frage
+    return [...build("waswere").slice(0, 3), ...build("vocab").slice(0, 5), ...[...sent.filter(s => !special(s)).slice(0, 3), sent.find(special)].map(sentenceQ)];
+  }
+  if (mode === "vocab") return pickVerbs().map(v => ({
+    type: "input", tip: verbTip(v), sentence: true, verb: v, ...verbAudio(v), head: v[3], sub: "Wie heißt das Verb auf Englisch?", solution: solution(v),
+    fields: [{ kind: "inf", label: "Infinitive (1. Form)", answer: v[0] }, { kind: "past", label: "Simple Past (2. Form)", answer: v[1], needAll: v[0] === "be" }]
+      .concat(store.pp ? [{ kind: "pp", label: "Past Participle (3. Form)", answer: v[2] }] : [])
   }));
   if (mode === "listen") return pickVerbs().map(v => ({
-    type: "input", listen: true, verb: v, ...verbAudio(v), sub: v[3], solution: solution(v),
+    type: "input", tip: verbTip(v), listen: true, verb: v, ...verbAudio(v), sub: v[3], solution: solution(v),
     head: `<button type="button" class="say big" data-audio="${vAudio(v, 1)}" data-say="${v[1]}">🔊 Anhören</button>`,
-    fields: [{ label: "Welche Simple-Past-Form hörst du?", answer: v[1], needAll: v[0] === "be" }]
+    fields: [{ kind: "past", label: "Welche Simple-Past-Form hörst du?", answer: v[1], needAll: v[0] === "be" }]
   }));
   if (mode === "waswere") return shuffle(WAS_WERE).slice(0, SESSION_LEN).map(s => ({
     type: "choice", sentence: true, ...sentenceAudio(s[0], s[1]), head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
     sub: "Was passt in die Lücke?", options: ["was", "were", "wasn't", "weren't"], answer: s[1], solution: fill(s[0], s[1])
   }));
-  return shuffle(SENTENCES).slice(0, SESSION_LEN).map(s => {
-    const special = s[1].includes("/");
-    return {
-      type: "input", sentence: true, ...sentenceAudio(s[0], s[2]), head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
-      sub: `<span class="hint">(${s[1]})</span>`, fields: [{ label: "Was gehört in die Lücke?", answer: s[2] }],
-      solution: fill(s[0], s[2].split("/")[0]),
-      tip: special ? "Merke: Bei Verneinung und Fragen steht <b>did / didn't + Grundform</b>." : ""
-    };
-  });
+  return shuffle(SENTENCES).slice(0, SESSION_LEN).map(sentenceQ);
+}
+
+function sentenceQ(s) {
+  return {
+    type: "input", sentence: true, ...sentenceAudio(s[0], s[2]), head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
+    sub: `<span class="hint">(${s[1]})</span>`, fields: [{ label: "Was gehört in die Lücke?", answer: s[2] }],
+    solution: fill(s[0], s[2].split("/")[0]),
+    tip: s[1].includes("/") ? "Merke: Bei Verneinung und Fragen steht <b>did / didn't + Grundform</b>." : ""
+  };
 }
 
 // ---------- Übungsrunde ----------
@@ -522,6 +607,8 @@ function showQ() {
       inputs.forEach((inp, i) => {
         const good = check(inp.value, q.fields[i].answer, q.fields[i].needAll);
         inp.classList.add(good ? "ok" : "bad"); inp.readOnly = true;
+        const f = q.fields[i], why = good ? "" : mistake(inp.value, f, q.verb);
+        if (!good && (q.fields.length > 1 || why)) inp.insertAdjacentHTML("afterend", `<div class="fix">${q.fields.length > 1 ? `Richtig: <b>${disp(f.answer)}</b>${why ? " · " : ""}` : ""}${why}</div>`);
         ok = ok && good;
       });
       document.getElementById("go").remove();
@@ -541,7 +628,8 @@ function showQ() {
       e.target.remove();
       document.getElementById("extra").innerHTML = `<div class="forms">
         <div><span>Simple Past</span><b>${disp(v[1])}</b>${sayBtn(vAudio(v, 1), v[1])}</div>
-        <div><span>Past Participle</span><b>${disp(v[2])}</b>${sayBtn(vAudio(v, 2), v[2])}</div></div>`;
+        <div><span>Past Participle</span><b>${disp(v[2])}</b>${sayBtn(vAudio(v, 2), v[2])}</div></div>
+        ${q.tip ? `<p class="muted" style="margin:12px 0 0">${q.tip}</p>` : ""}`;
       if (store.sound) play(q.audio, q.sayText);
       document.getElementById("fb").innerHTML = `<div class="row" style="margin-top:12px">
         <button class="btn ghost" id="no">Nochmal üben</button><button class="btn" id="yes">Wusste ich!</button></div>`;
