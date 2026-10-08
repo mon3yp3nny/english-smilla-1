@@ -131,7 +131,8 @@
   td[data-say]:active { background: var(--accent-soft); }
   tr.now td { background: var(--accent-soft); }
   .tour { position: sticky; bottom: calc(14px + env(safe-area-inset-bottom)); text-align: center; margin-top: 16px; pointer-events: none; }
-  .tour .btn { width: auto; padding: 16px 30px; font-size: 1.2rem; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
+  .tour .btn { display: inline-block; margin: 0 3px; width: auto; padding: 16px 30px; font-size: 1.2rem; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
+  .tour .btn[hidden] { display: none; }
   tr.done td:first-child::after { content: " ✓"; color: var(--ok); }
   .link { border: 0; background: none; color: var(--muted); text-decoration: underline; font-size: .85rem; padding: 8px; }
 </style>
@@ -141,80 +142,80 @@
 
 <script>
 // ---------- Daten: List of irregular verbs (S. 215–217) ----------
-// [infinitive, simple past, past participle, German] – Alternativen mit "/" getrennt
+// [infinitive, simple past, past participle, German, deutsche Ich-Form] – Alternativen mit "/" getrennt
 const VERBS = [
-  ["be","was/were","been","sein"],
-  ["become","became","become","werden"],
-  ["begin","began","begun","beginnen; anfangen"],
-  ["bring","brought","brought","bringen; mitbringen"],
-  ["build","built","built","bauen"],
-  ["buy","bought","bought","kaufen"],
-  ["choose","chose","chosen","auswählen; wählen"],
-  ["come","came","come","kommen"],
-  ["cut","cut","cut","schneiden"],
-  ["do","did","done","machen; tun"],
-  ["draw","drew","drawn","zeichnen"],
-  ["drink","drank","drunk","trinken"],
-  ["drive","drove","driven","fahren"],
-  ["eat","ate","eaten","essen"],
-  ["fall","fell","fallen","fallen"],
-  ["feed","fed","fed","füttern"],
-  ["feel","felt","felt","(sich) fühlen"],
-  ["fight","fought","fought","kämpfen; (sich) streiten"],
-  ["find","found","found","finden; herausfinden"],
-  ["forget","forgot","forgotten","vergessen"],
-  ["freeze","froze","frozen","einfrieren; frieren"],
-  ["get","got","got","bekommen; werden"],
-  ["get up","got up","got up","aufstehen"],
-  ["give","gave","given","geben"],
-  ["go","went","gone","gehen; fahren"],
-  ["grow","grew","grown","wachsen; anbauen; züchten"],
+  ["be","was/were","been","sein","ich bin"],
+  ["become","became","become","werden","ich werde"],
+  ["begin","began","begun","beginnen; anfangen","ich beginne"],
+  ["bring","brought","brought","bringen; mitbringen","ich bringe"],
+  ["build","built","built","bauen","ich baue"],
+  ["buy","bought","bought","kaufen","ich kaufe"],
+  ["choose","chose","chosen","auswählen; wählen","ich wähle aus"],
+  ["come","came","come","kommen","ich komme"],
+  ["cut","cut","cut","schneiden","ich schneide"],
+  ["do","did","done","machen; tun","ich mache"],
+  ["draw","drew","drawn","zeichnen","ich zeichne"],
+  ["drink","drank","drunk","trinken","ich trinke"],
+  ["drive","drove","driven","fahren","ich fahre"],
+  ["eat","ate","eaten","essen","ich esse"],
+  ["fall","fell","fallen","fallen","ich falle"],
+  ["feed","fed","fed","füttern","ich füttere"],
+  ["feel","felt","felt","(sich) fühlen","ich fühle"],
+  ["fight","fought","fought","kämpfen; (sich) streiten","ich kämpfe"],
+  ["find","found","found","finden; herausfinden","ich finde"],
+  ["forget","forgot","forgotten","vergessen","ich vergesse"],
+  ["freeze","froze","frozen","einfrieren; frieren","ich friere"],
+  ["get","got","got","bekommen; werden","ich bekomme"],
+  ["get up","got up","got up","aufstehen","ich stehe auf"],
+  ["give","gave","given","geben","ich gebe"],
+  ["go","went","gone","gehen; fahren","ich gehe"],
+  ["grow","grew","grown","wachsen; anbauen; züchten","ich wachse"],
 
-  ["hang out (with)","hung out (with)","hung out (with)","rumhängen (mit); sich treffen (mit); sich herumtreiben (mit)"],
-  ["have","had","had","haben; essen"],
-  ["hear","heard","heard","hören"],
-  ["hold","held","held","halten; festhalten; tragen"],
-  ["hurt","hurt","hurt","weh tun; verletzen"],
-  ["keep","kept","kept","behalten; halten; aufbewahren"],
-  ["know","knew","known","wissen; kennen"],
-  ["learn","learnt/learned","learnt/learned","lernen"],
-  ["leave","left","left","abfahren; verlassen; lassen"],
-  ["let","let","let","lassen"],
-  ["make","made","made","machen; tun; bilden"],
-  ["mean","meant","meant","bedeuten; meinen"],
-  ["meet","met","met","treffen; kennenlernen"],
-  ["pay","paid","paid","bezahlen"],
-  ["put","put","put","stellen; setzen; legen"],
-  ["read","read","read","lesen"],
-  ["ride","rode","ridden","fahren; reiten"],
-  ["run","ran","run","rennen; laufen"],
-  ["say","said","said","sagen; sprechen"],
-  ["see","saw","seen","sehen"],
-  ["sell","sold","sold","verkaufen"],
-  ["send","sent","sent","schicken; senden"],
-  ["shake","shook","shaken","schütteln"],
-  ["show","showed","shown","zeigen"],
-  ["sing","sang","sung","singen"],
-  ["sink","sank","sunk","untergehen; sinken"],
-  ["sit down","sat down","sat down","sich hinsetzen; sich setzen"],
-  ["sleep","slept","slept","schlafen"],
+  ["hang out (with)","hung out (with)","hung out (with)","rumhängen (mit); sich treffen (mit); sich herumtreiben (mit)","ich hänge rum"],
+  ["have","had","had","haben; essen","ich habe"],
+  ["hear","heard","heard","hören","ich höre"],
+  ["hold","held","held","halten; festhalten; tragen","ich halte"],
+  ["hurt","hurt","hurt","weh tun; verletzen","ich verletze"],
+  ["keep","kept","kept","behalten; halten; aufbewahren","ich behalte"],
+  ["know","knew","known","wissen; kennen","ich weiß"],
+  ["learn","learnt/learned","learnt/learned","lernen","ich lerne"],
+  ["leave","left","left","abfahren; verlassen; lassen","ich fahre ab"],
+  ["let","let","let","lassen","ich lasse"],
+  ["make","made","made","machen; tun; bilden","ich mache"],
+  ["mean","meant","meant","bedeuten; meinen","ich meine"],
+  ["meet","met","met","treffen; kennenlernen","ich treffe"],
+  ["pay","paid","paid","bezahlen","ich bezahle"],
+  ["put","put","put","stellen; setzen; legen","ich stelle"],
+  ["read","read","read","lesen","ich lese"],
+  ["ride","rode","ridden","fahren; reiten","ich reite"],
+  ["run","ran","run","rennen; laufen","ich renne"],
+  ["say","said","said","sagen; sprechen","ich sage"],
+  ["see","saw","seen","sehen","ich sehe"],
+  ["sell","sold","sold","verkaufen","ich verkaufe"],
+  ["send","sent","sent","schicken; senden","ich schicke"],
+  ["shake","shook","shaken","schütteln","ich schüttle"],
+  ["show","showed","shown","zeigen","ich zeige"],
+  ["sing","sang","sung","singen","ich singe"],
+  ["sink","sank","sunk","untergehen; sinken","ich sinke"],
+  ["sit down","sat down","sat down","sich hinsetzen; sich setzen","ich setze mich hin"],
+  ["sleep","slept","slept","schlafen","ich schlafe"],
 
-  ["smell","smelt/smelled","smelt/smelled","riechen"],
-  ["speak","spoke","spoken","sprechen"],
-  ["spell","spelt/spelled","spelt/spelled","buchstabieren"],
-  ["spend","spent","spent","(Zeit) verbringen; (Geld) ausgeben"],
-  ["stand","stood","stood","stehen"],
-  ["stick","stuck","stuck","kleben"],
-  ["swim","swam","swum","schwimmen"],
-  ["take","took","taken","nehmen; mitnehmen; dauern"],
-  ["tell","told","told","sagen; erzählen"],
-  ["think","thought","thought","finden; denken; glauben"],
-  ["throw","threw","thrown","werfen"],
-  ["understand","understood","understood","verstehen"],
-  ["wake up","woke up","woken up","aufwachen; wecken"],
-  ["wear","wore","worn","(Kleidung) tragen; anhaben"],
-  ["win","won","won","gewinnen; siegen"],
-  ["write","wrote","written","schreiben"]
+  ["smell","smelt/smelled","smelt/smelled","riechen","ich rieche"],
+  ["speak","spoke","spoken","sprechen","ich spreche"],
+  ["spell","spelt/spelled","spelt/spelled","buchstabieren","ich buchstabiere"],
+  ["spend","spent","spent","(Zeit) verbringen; (Geld) ausgeben","ich verbringe Zeit"],
+  ["stand","stood","stood","stehen","ich stehe"],
+  ["stick","stuck","stuck","kleben","ich klebe"],
+  ["swim","swam","swum","schwimmen","ich schwimme"],
+  ["take","took","taken","nehmen; mitnehmen; dauern","ich nehme"],
+  ["tell","told","told","sagen; erzählen","ich erzähle"],
+  ["think","thought","thought","finden; denken; glauben","ich denke"],
+  ["throw","threw","thrown","werfen","ich werfe"],
+  ["understand","understood","understood","verstehen","ich verstehe"],
+  ["wake up","woke up","woken up","aufwachen; wecken","ich wache auf"],
+  ["wear","wore","worn","(Kleidung) tragen; anhaben","ich trage"],
+  ["win","won","won","gewinnen; siegen","ich gewinne"],
+  ["write","wrote","written","schreiben","ich schreibe"]
 ];
 
 const RANGES = [
@@ -336,8 +337,13 @@ const plain = (sentence, answer) => {
   if (sentence.startsWith("___")) word = word[0].toUpperCase() + word.slice(1);
   return sentence.replace(" (not)", "").replace("___", word);
 };
+// Beispiel mit "I" für "Alle vorlesen": "I am, I was, I have been"
+const example = v => {
+  const f = i => v[i].split("/")[0].replace(/ ?\(.*?\)/g, "");
+  return [v[0] === "be" ? "am" : f(0), f(1), "have " + f(2)].map(t => "I " + t);
+};
 
-const VERSION = 12;
+const VERSION = 13;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -400,7 +406,7 @@ const fill = (sentence, word) => {
 
 app.addEventListener("click", e => {
   const b = e.target.closest("[data-say]");
-  if (b) { e.stopPropagation(); stopTour(); play(b.dataset.audio, b.dataset.say); }
+  if (b) { e.stopPropagation(); pauseTour(); play(b.dataset.audio, b.dataset.say); }
 });
 
 // ---------- Startseite ----------
@@ -453,43 +459,59 @@ function home() {
 }
 
 // ---------- Liste ----------
-// "Alle vorlesen": erst das deutsche Wort, dann die drei Formen, kurze Pause, nächstes Verb
-let tour = 0, tourTimer;   // tour = Nummer des laufenden Durchgangs, 0 = aus
-function stopTour() {
+// "Alle vorlesen": deutsches Wort, die drei Formen, dann ein Beispiel ("ich bin" – "I am, I was, I have been"), kurze Pause, nächstes Verb
+let tour = 0, tourAt = 0, tourTimer;   // tour = Nummer des laufenden Durchgangs (0 = aus), tourAt = aktuelles Verb
+function tourUI() {
+  const b = document.getElementById("tour"), r = document.getElementById("tourReset");
+  if (!b) return;
+  b.textContent = tour ? "⏸ Pause" : tourAt ? "▶️ Weiter" : "▶️ Alle vorlesen";
+  r.hidden = !!tour || !tourAt;
+}
+// Pause merkt sich das Verb; "Weiter" fängt bei diesem Verb wieder an
+function pauseTour() {
   if (!tour) return;
   tour = 0; clearTimeout(tourTimer);
   player.onended = null; player.pause();
   if ("speechSynthesis" in window) speechSynthesis.cancel();
+  tourUI();
+}
+function resetTour() {
+  pauseTour(); tourAt = 0;
   app.querySelectorAll("tr.now").forEach(r => r.classList.remove("now"));
-  const b = document.getElementById("tour");
-  if (b) b.textContent = "▶️ Alle vorlesen";
+  tourUI();
 }
 function startTour() {
   const id = tour = Date.now(), rows = [...app.querySelectorAll("tr[data-say]")];
   const wait = (ms, fn) => () => { if (tour === id) tourTimer = setTimeout(() => { if (tour === id) fn(); }, ms); };
   const step = i => {
     rows.forEach(r => r.classList.remove("now"));
-    if (i >= VERBS.length) return stopTour();
+    if (i >= VERBS.length) return resetTour();
     const v = VERBS[i];
+    tourAt = i;
     rows[i].classList.add("now");
     rows[i].scrollIntoView({ block: "center", behavior: "smooth" });
-    play(vAudio(v, "de"), v[3], wait(400, () => play(vAudio(v, "all"), verbAudio(v).sayText, wait(1300, () => step(i + 1)))), "de-DE");
+    // [Datei, Text für die Browser-Stimme, Sprache, Pause danach]
+    const clips = [["de", v[3], "de-DE", 400], ["all", verbAudio(v).sayText, "", 800], ["ich", v[4], "de-DE", 400], ["ex", example(v).join(", "), "", 1300]];
+    const run = k => k >= clips.length ? step(i + 1) : play(vAudio(v, clips[k][0]), clips[k][1], wait(clips[k][3], () => run(k + 1)), clips[k][2]);
+    run(0);
   };
-  document.getElementById("tour").textContent = "⏹ Stopp";
-  step(0);
+  step(tourAt);
+  tourUI();
 }
 
 function list() {
   app.innerHTML = `
     <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
-    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst du alle Verben nacheinander.</p>
+    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst du alle Verben nacheinander – mit Pause-Taste.</p>
     <table>
       <tr><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
       ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}">${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
     </table>
-    <div class="tour"><button class="btn" id="tour">▶️ Alle vorlesen</button></div>`;
-  document.getElementById("back").onclick = () => { stopTour(); home(); };
-  document.getElementById("tour").onclick = () => tour ? stopTour() : startTour();
+    <div class="tour"><button class="btn ghost" id="tourReset" hidden>⏮ Von vorn</button><button class="btn" id="tour">▶️ Alle vorlesen</button></div>`;
+  tourAt = 0;
+  document.getElementById("back").onclick = () => { resetTour(); home(); };
+  document.getElementById("tour").onclick = () => tour ? pauseTour() : startTour();
+  document.getElementById("tourReset").onclick = resetTour;
   window.scrollTo(0, 0);
 }
 

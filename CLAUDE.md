@@ -18,10 +18,10 @@ UI text and code comments are in German; the content being taught is English. Ke
 
 ### Data block and its coupling to the audio generator
 
-The top of the `<script>` holds the data (`VERBS`, `RANGES`, `WAS_WERE`, `SENTENCES`) and the filename helpers `slug` and `plain`. `tools/gen-audio.js` does not import anything: it reads `index.html`, cuts out everything between `<script>` and the `// ---------- Speicher` comment, and evaluates it. So:
+The top of the `<script>` holds the data (`VERBS`, `RANGES`, `WAS_WERE`, `SENTENCES`) and the helpers `slug`, `plain` and `example`. `tools/gen-audio.js` does not import anything: it reads `index.html`, cuts out everything between `<script>` and the `// ---------- Speicher` comment, and evaluates it. So:
 
 - That section must stay pure data and pure functions (no DOM, no `localStorage`), and the `// ---------- Speicher` marker comment must stay where it is.
-- Audio filenames are derived from the text: `audio/v/<slug(infinitive)>-{0,1,2,all,de}.mp3` per verb (`de` is the German meaning, spoken by a German voice for the "Alle vorlesen" run in the list) and `audio/s/<slug(plain(sentence, answer))>.mp3` per sentence. Editing a verb or sentence changes its filename, so rerun the generator and delete the orphaned MP3s. MP3s are committed.
+- Audio filenames are derived from the text: `audio/v/<slug(infinitive)>-{0,1,2,all,de,ich,ex}.mp3` per verb (`de` is the German meaning and `ich` the German first-person form, both spoken by a German voice; `ex` is the English "I …, I …, I have …" example built by `example()`; these three are used by the "Alle vorlesen" run in the list) and `audio/s/<slug(plain(sentence, answer))>.mp3` per sentence. Editing a verb or sentence changes its filename, so rerun the generator and delete the orphaned MP3s. MP3s are committed.
 - If an MP3 is missing or fails to load, `play()` falls back to the browser's speech synthesis, so a missing file is silent in testing rather than an error.
 - `RANGES` are hard-coded index slices into `VERBS` (they mirror the textbook pages). Adding, removing or reordering verbs means updating those indices.
 - The pronunciation override for "read" (spoken as "red" in the past forms) lives in `gen-audio.js`, not in the data.

@@ -5,7 +5,7 @@ const PROJECT = "hb-push-fischbek", VOICE = "en-GB-Neural2-A", VOICE_DE = "de-DE
 const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const data = html.match(/<script>([\s\S]*?)\/\/ -+ Speicher/)[1];
-const { VERBS, WAS_WERE, SENTENCES, slug, plain } = new Function(data + "; return { VERBS, WAS_WERE, SENTENCES, slug, plain };")();
+const { VERBS, WAS_WERE, SENTENCES, slug, plain, example } = new Function(data + "; return { VERBS, WAS_WERE, SENTENCES, slug, plain, example };")();
 
 // "read" klingt im Simple Past wie "red" – so bekommt die Stimme es sicher richtig
 const spoken = (v, i) => v[0] === "read" && i > 0 ? "red" : v[i].replace(/[()]/g, "").split("/").join(", ");
@@ -14,7 +14,10 @@ for (const v of VERBS) {
   const forms = [0, 1, 2].map(i => spoken(v, i));
   forms.forEach((t, i) => jobs.push([`v/${slug(v[0])}-${i}`, { text: t }]));
   jobs.push([`v/${slug(v[0])}-all`, { ssml: `<speak>${forms.join('<break time="400ms"/>')}</speak>` }]);
-  // deutsche Bedeutung für "Alle vorlesen" in der Liste
+  // deutsche Bedeutung und Beispiel ("ich bin" – "I am, I was, I have been") für "Alle vorlesen" in der Liste
+  jobs.push([`v/${slug(v[0])}-ich`, { text: v[4] }, VOICE_DE]);
+  const ex = example(v).map((t, i) => v[0] === "read" && i > 0 ? t.replace(/read$/, "red") : t);
+  jobs.push([`v/${slug(v[0])}-ex`, { ssml: `<speak>${ex.join('<break time="400ms"/>')}</speak>` }]);
   jobs.push([`v/${slug(v[0])}-de`, { text: v[3].replace(/[()]/g, "").replace(/;/g, ",") }, VOICE_DE]);
 }
 for (const s of [...WAS_WERE.map(s => plain(s[0], s[1])), ...SENTENCES.map(s => plain(s[0], s[2]))])
