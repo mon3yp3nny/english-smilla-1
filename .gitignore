@@ -1,0 +1,4 @@
+.DS_Store
+# Fotos der Schulbuchseiten nicht veröffentlichen
+*.jpeg
+*.jpg

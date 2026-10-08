@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#6c4cf1">
+<title>Englisch-Trainer: Irregular Verbs</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦝</text></svg>">
+<style>
+  :root {
+    --bg: #f4f2fb; --card: #ffffff; --text: #1f1b2e; --muted: #6b6780;
+    --line: #e3dff0; --accent: #6c4cf1; --accent-soft: #ece7ff;
+    --ok: #1a9c5b; --ok-soft: #dcf5e7; --bad: #d63a4a; --bad-soft: #fde3e6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15131f; --card: #211e30; --text: #f1eefb; --muted: #a29dba;
+      --line: #35304a; --accent: #9c85ff; --accent-soft: #2e2850;
+      --ok: #4fd08f; --ok-soft: #173a2a; --bad: #ff7a88; --bad-soft: #45202a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 17px/1.45 ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  #app { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 4px 0 2px; }
+  h2 { font-size: 1.15rem; margin: 0 0 8px; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 18px; margin: 14px 0;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .btn {
+    display: block; width: 100%; padding: 14px 16px; border-radius: 14px;
+    border: 0; background: var(--accent); color: #fff; font-weight: 700; font-size: 1.05rem;
+  }
+  .btn.ghost { background: var(--accent-soft); color: var(--accent); }
+  .btn:disabled { opacity: .5; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  .bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .3s; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+  .chip {
+    padding: 8px 12px; border-radius: 99px; border: 1px solid var(--line);
+    background: var(--card); font-size: .9rem;
+  }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+
+  .mode {
+    display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 14px 16px; margin: 10px 0;
+  }
+  .mode .ico { font-size: 1.8rem; width: 40px; text-align: center; }
+  .mode b { display: block; }
+  .mode span.muted { display: block; }
+  .section { margin: 22px 0 4px; font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  label.check { display: flex; align-items: center; gap: 8px; font-size: .95rem; margin-top: 8px; }
+  label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .top .bar { flex: 1; }
+  .x { border: 0; background: none; font-size: 1.4rem; padding: 4px 8px; color: var(--muted); }
+  .count { font-size: .9rem; color: var(--muted); min-width: 48px; text-align: right; }
+
+  .q { text-align: center; padding: 26px 18px; }
+  .q .head { font-size: 1.7rem; font-weight: 800; line-height: 1.25; }
+  .q .head.sentence { font-size: 1.3rem; font-weight: 600; }
+  .q .sub { color: var(--muted); margin-top: 6px; }
+  .say { border: 0; background: var(--accent-soft); border-radius: 99px; padding: 4px 10px; margin-left: 6px; font-size: 1rem; vertical-align: middle; }
+  .blank { display: inline-block; min-width: 64px; border-bottom: 3px solid var(--accent); color: var(--accent); font-weight: 800; padding: 0 4px; }
+  .hint { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 8px; padding: 2px 10px; font-weight: 700; }
+
+  .field { margin: 12px 0; }
+  .field label { display: block; font-size: .85rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  input[type=text] {
+    width: 100%; padding: 14px; font: inherit; font-size: 1.15rem; color: var(--text);
+    background: var(--card); border: 2px solid var(--line); border-radius: 14px; outline: none;
+  }
+  input[type=text]:focus { border-color: var(--accent); }
+  input.ok { border-color: var(--ok); background: var(--ok-soft); }
+  input.bad { border-color: var(--bad); background: var(--bad-soft); }
+
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .opt { padding: 16px 10px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); font-weight: 700; font-size: 1.05rem; }
+  .opt.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.bad { border-color: var(--bad); background: var(--bad-soft); }
+
+  .fb { border-radius: 14px; padding: 12px 14px; margin: 12px 0; font-weight: 600; }
+  .fb.ok { background: var(--ok-soft); color: var(--ok); }
+  .fb.bad { background: var(--bad-soft); color: var(--bad); }
+  .fb small { display: block; font-weight: 500; color: var(--text); margin-top: 4px; font-size: .95rem; }
+
+  .forms { display: grid; gap: 8px; margin-top: 16px; text-align: left; }
+  .forms div { background: var(--accent-soft); border-radius: 12px; padding: 10px 14px; }
+  .forms span { display: block; font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .forms b { font-size: 1.2rem; }
+
+  .score { font-size: 3rem; font-weight: 800; text-align: center; margin: 6px 0 0; }
+  .center { text-align: center; }
+  ul.miss { padding-left: 20px; margin: 6px 0 0; }
+  ul.miss li { margin: 4px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 6px 4px; position: sticky; top: 0; background: var(--bg); }
+  td { padding: 8px 4px; border-top: 1px solid var(--line); vertical-align: top; }
+  td:first-child { font-weight: 700; }
+  td.de { color: var(--muted); }
+  tr.done td:first-child::after { content: " ✓"; color: var(--ok); }
+  .link { border: 0; background: none; color: var(--muted); text-decoration: underline; font-size: .85rem; padding: 8px; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script>
+// ---------- Daten: List of irregular verbs (S. 215–217) ----------
+// [infinitive, simple past, past participle, German] – Alternativen mit "/" getrennt
+const VERBS = [
+  ["be","was/were","been","sein"],
+  ["become","became","become","werden"],
+  ["begin","began","begun","beginnen; anfangen"],
+  ["bring","brought","brought","bringen; mitbringen"],
+  ["build","built","built","bauen"],
+  ["buy","bought","bought","kaufen"],
+  ["choose","chose","chosen","auswählen; wählen"],
+  ["come","came","come","kommen"],
+  ["cut","cut","cut","schneiden"],
+  ["do","did","done","machen; tun"],
+  ["draw","drew","drawn","zeichnen"],
+  ["drink","drank","drunk","trinken"],
+  ["drive","drove","driven","fahren"],
+  ["eat","ate","eaten","essen"],
+  ["fall","fell","fallen","fallen"],
+  ["feed","fed","fed","füttern"],
+  ["feel","felt","felt","(sich) fühlen"],
+  ["fight","fought","fought","kämpfen; (sich) streiten"],
+  ["find","found","found","finden; herausfinden"],
+  ["forget","forgot","forgotten","vergessen"],
+  ["freeze","froze","frozen","einfrieren; frieren"],
+  ["get","got","got","bekommen; werden"],
+  ["get up","got up","got up","aufstehen"],
+  ["give","gave","given","geben"],
+  ["go","went","gone","gehen; fahren"],
+  ["grow","grew","grown","wachsen; anbauen; züchten"],
+
+  ["hang out (with)","hung out (with)","hung out (with)","rumhängen (mit); sich treffen (mit)"],
+  ["have","had","had","haben; essen"],
+  ["hear","heard","heard","hören"],
+  ["hold","held","held","halten; festhalten; tragen"],
+  ["hurt","hurt","hurt","weh tun; verletzen"],
+  ["keep","kept","kept","behalten; halten; aufbewahren"],
+  ["know","knew","known","wissen; kennen"],
+  ["learn","learnt/learned","learnt/learned","lernen"],
+  ["leave","left","left","abfahren; verlassen; lassen"],
+  ["let","let","let","lassen"],
+  ["make","made","made","machen; tun; bilden"],
+  ["mean","meant","meant","bedeuten; meinen"],
+  ["meet","met","met","treffen; kennenlernen"],
+  ["pay","paid","paid","bezahlen"],
+  ["put","put","put","stellen; setzen; legen"],
+  ["read","read","read","lesen"],
+  ["ride","rode","ridden","fahren; reiten"],
+  ["run","ran","run","rennen; laufen"],
+  ["say","said","said","sagen; sprechen"],
+  ["see","saw","seen","sehen"],
+  ["sell","sold","sold","verkaufen"],
+  ["send","sent","sent","schicken; senden"],
+  ["shake","shook","shaken","schütteln"],
+  ["show","showed","shown","zeigen"],
+  ["sing","sang","sung","singen"],
+  ["sink","sank","sunk","untergehen; sinken"],
+  ["sit down","sat down","sat down","sich hinsetzen; sich setzen"],
+  ["sleep","slept","slept","schlafen"],
+
+  ["smell","smelt/smelled","smelt/smelled","riechen"],
+  ["speak","spoke","spoken","sprechen"],
+  ["spell","spelt/spelled","spelt/spelled","buchstabieren"],
+  ["spend","spent","spent","(Zeit) verbringen; (Geld) ausgeben"],
+  ["stand","stood","stood","stehen"],
+  ["stick","stuck","stuck","kleben"],
+  ["swim","swam","swum","schwimmen"],
+  ["take","took","taken","nehmen; mitnehmen; dauern"],
+  ["tell","told","told","sagen; erzählen"],
+  ["think","thought","thought","finden; denken; glauben"],
+  ["throw","threw","thrown","werfen"],
+  ["understand","understood","understood","verstehen"],
+  ["wake up","woke up","woken up","aufwachen; wecken"],
+  ["wear","wore","worn","(Kleidung) tragen; anhaben"],
+  ["win","won","won","gewinnen; siegen"],
+  ["write","wrote","written","schreiben"]
+];
+
+const RANGES = [
+  ["Alle 70", 0, 70],
+  ["be – grow", 0, 26],
+  ["hang out – sleep", 26, 54],
+  ["smell – write", 54, 70]
+];
+
+// to be im Simple Past: [Satz, Lösung]
+const WAS_WERE = [
+  ["I ___ at home yesterday.", "was"],
+  ["We ___ at the cinema last night.", "were"],
+  ["My sister ___ ill last week.", "was"],
+  ["The children ___ very tired after the trip.", "were"],
+  ["It ___ cold and rainy on Monday.", "was"],
+  ["You ___ late for school this morning.", "were"],
+  ["Tom and Lisa ___ in London last summer.", "were"],
+  ["The film ___ really funny.", "was"],
+  ["He ___ (not) at school yesterday.", "wasn't"],
+  ["They ___ (not) happy about the test.", "weren't"],
+  ["___ you at the party on Saturday?", "were"],
+  ["___ the test difficult?", "was"],
+  ["Where ___ you last weekend?", "were"],
+  ["My grandparents ___ (not) at home.", "weren't"],
+  ["The weather ___ (not) very good.", "wasn't"],
+  ["I ___ eleven last year.", "was"],
+  ["___ your friends at the match?", "were"],
+  ["The shops ___ (not) open on Sunday.", "weren't"],
+  ["My dog ___ (not) in the garden.", "wasn't"],
+  ["Who ___ your first teacher?", "was"]
+];
+
+// Sätze im Simple Past: [Satz, Hinweis, Lösung]
+const SENTENCES = [
+  ["Last summer we ___ to Spain.", "go", "went"],
+  ["I ___ a pizza for dinner yesterday.", "eat", "ate"],
+  ["We ___ a great film last night.", "see", "saw"],
+  ["My mum ___ a new car last week.", "buy", "bought"],
+  ["She ___ a long email to her friend.", "write", "wrote"],
+  ["He ___ the bus to school this morning.", "take", "took"],
+  ["I ___ ten euros in the street.", "find", "found"],
+  ["My cousins ___ to my birthday party.", "come", "came"],
+  ["The children ___ orange juice at breakfast.", "drink", "drank"],
+  ["Grandma ___ me a book for Christmas.", "give", "gave"],
+  ["Dad ___ pancakes on Sunday.", "make", "made"],
+  ["We ___ a lot of fun at the zoo.", "have", "had"],
+  ["I ___ my friends in the park yesterday.", "meet", "met"],
+  ["The dog ___ after the ball.", "run", "ran"],
+  ["We ___ in the sea every day on holiday.", "swim", "swam"],
+  ["Our teacher ___ us a funny story.", "tell", "told"],
+  ["I ___ the test was easy.", "think", "thought"],
+  ["Our team ___ the match 3–1.", "win", "won"],
+  ["She ___ three books in the holidays.", "read", "read"],
+  ["They ___ a song at the school concert.", "sing", "sang"],
+  ["I ___ very well last night.", "sleep", "slept"],
+  ["He ___ a blue T-shirt yesterday.", "wear", "wore"],
+  ["I ___ at six o'clock this morning.", "get up", "got up"],
+  ["Oh no! I ___ my homework at home.", "forget", "forgot"],
+  ["She ___ all the answers in the quiz.", "know", "knew"],
+  ["The lesson ___ at eight o'clock.", "begin", "began"],
+  ["He ___ off his bike and hurt his knee.", "fall", "fell"],
+  ["Lisa ___ her dog to school last Friday.", "bring", "brought"],
+  ["We ___ English in class yesterday.", "speak", "spoke"],
+  ["The train ___ at 7:15.", "leave", "left"],
+  ["They ___ a sandcastle on the beach.", "build", "built"],
+  ["My brother ___ a picture of our cat.", "draw", "drew"],
+  ["He ___ the ball to me.", "throw", "threw"],
+  ["I ___ sick after the roller coaster.", "feel", "felt"],
+  ["They ___ their old house last year.", "sell", "sold"],
+  ["I ___ to school yesterday.", "not / go", "didn't go/did not go"],
+  ["She ___ her lunch.", "not / eat", "didn't eat/did not eat"],
+  ["We ___ the film.", "not / see", "didn't see/did not see"],
+  ["They ___ to the party.", "not / come", "didn't come/did not come"],
+  ["He ___ his homework.", "not / do", "didn't do/did not do"],
+  ["___ the tickets yesterday?", "you / buy", "did you buy"],
+  ["___ the letter last week?", "she / write", "did she write"],
+  ["___ the match?", "they / win", "did they win"],
+  ["___ a good time in London?", "you / have", "did you have"]
+];
+
+const SESSION_LEN = 10;
+const KEY = "irregular-verbs-v1";
+
+// ---------- Speicher ----------
+let store = {};
+try { store = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+store.p = store.p || {};          // Verb -> richtige Antworten in Folge
+store.range = store.range || 0;
+store.pp = !!store.pp;
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+
+// ---------- Helfer ----------
+const app = document.getElementById("app");
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const disp = form => form.split("/").join(", ");
+const streak = v => store.p[v[0]] || 0;
+const isDone = v => streak(v) >= 2;
+const pool = () => VERBS.slice(RANGES[store.range][1], RANGES[store.range][2]);
+
+function norm(s) {
+  return s.toLowerCase().replace(/[’`´]/g, "'").replace(/[().!?]/g, "").replace(/\s+/g, " ").trim();
+}
+function expand(form) {
+  return form.split("/").flatMap(a => a.includes("(") ? [norm(a), norm(a.replace(/\(.*?\)/g, ""))] : [norm(a)]);
+}
+// needAll: alle Alternativen müssen genannt werden (was UND were)
+function check(input, form, needAll) {
+  const alts = expand(form), n = norm(input);
+  if (!n) return false;
+  if (!needAll && alts.includes(n)) return true;
+  const parts = n.split(/[,\/]|\s+/).filter(p => p && !["and", "or", "und", "oder"].includes(p));
+  return parts.length > 0 && parts.every(p => alts.includes(p)) && (!needAll || alts.every(a => parts.includes(a)));
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text.replace(/[()\/]/g, " "));
+  u.lang = "en-GB"; u.rate = 0.9;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+const sayBtn = text => "speechSynthesis" in window ? `<button type="button" class="say" data-say="${text}" aria-label="Anhören">🔊</button>` : "";
+const fill = (sentence, word) => {
+  if (sentence.startsWith("___")) word = word[0].toUpperCase() + word.slice(1);
+  return sentence.replace(/ \(not\)/, "").replace("___", `<span class="blank">${word || "&nbsp;"}</span>`);
+};
+
+app.addEventListener("click", e => {
+  const b = e.target.closest("[data-say]");
+  if (b) { e.stopPropagation(); speak(b.dataset.say); }
+});
+
+// ---------- Startseite ----------
+function home() {
+  const done = VERBS.filter(isDone).length;
+  const modes = [
+    ["cards", "🃏", "Karteikarten", "Anschauen, aufdecken, merken"],
+    ["write", "✍️", "Formen schreiben", "Du tippst die Formen selbst ein"],
+    ["quiz", "🎯", "Quiz", "Vier Antworten – welche stimmt?"]
+  ];
+  const grammar = [
+    ["waswere", "🔀", "was oder were?", "to be im Simple Past"],
+    ["sentences", "📝", "Sätze im Simple Past", "Lücken füllen, auch Verneinung und Fragen"]
+  ];
+  const btn = m => `<button class="mode" data-mode="${m[0]}"><span class="ico">${m[1]}</span><span><b>${m[2]}</b><span class="muted">${m[3]}</span></span></button>`;
+  app.innerHTML = `
+    <h1>🦝 Englisch-Trainer</h1>
+    <p class="muted">Irregular verbs &amp; Simple Past</p>
+    <div class="card">
+      <h2>${done} von ${VERBS.length} Verben sicher</h2>
+      <div class="bar"><i style="width:${done / VERBS.length * 100}%"></i></div>
+      <p class="muted" style="margin:8px 0 0">Ein Verb gilt als sicher, wenn du es zweimal hintereinander richtig hattest.</p>
+    </div>
+    <div class="section">Welche Verben?</div>
+    <div class="chips">${RANGES.map((r, i) => `<button class="chip ${i === store.range ? "on" : ""}" data-range="${i}">${r[0]}</button>`).join("")}</div>
+    <div class="section">Unregelmäßige Verben</div>
+    ${modes.map(btn).join("")}
+    <label class="check"><input type="checkbox" id="pp" ${store.pp ? "checked" : ""}> Beim Schreiben auch die 3. Form (past participle) abfragen</label>
+    <div class="section">Grammatik</div>
+    ${grammar.map(btn).join("")}
+    <div class="section">Nachschlagen</div>
+    <button class="mode" data-mode="list"><span class="ico">📖</span><span><b>Alle Verben</b><span class="muted">Die ganze Liste zum Nachlesen</span></span></button>
+    <p class="center"><button class="link" id="reset">Fortschritt zurücksetzen</button></p>`;
+
+  app.querySelectorAll("[data-range]").forEach(b => b.onclick = () => { store.range = +b.dataset.range; save(); home(); });
+  app.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => b.dataset.mode === "list" ? list() : start(b.dataset.mode));
+  document.getElementById("pp").onchange = e => { store.pp = e.target.checked; save(); };
+  document.getElementById("reset").onclick = () => { if (confirm("Wirklich den ganzen Fortschritt löschen?")) { store.p = {}; save(); home(); } };
+  window.scrollTo(0, 0);
+}
+
+// ---------- Liste ----------
+function list() {
+  app.innerHTML = `
+    <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
+    <table>
+      <tr><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
+      ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""}"><td>${v[0]}</td><td>${disp(v[1])}</td><td>${disp(v[2])}</td><td class="de">${v[3]}</td></tr>`).join("")}
+    </table>`;
+  document.getElementById("back").onclick = home;
+  window.scrollTo(0, 0);
+}
+
+// ---------- Fragen bauen ----------
+// Schwächste Verben zuerst, bei Gleichstand zufällig
+const pickVerbs = () => shuffle(pool()).sort((a, b) => streak(a) - streak(b)).slice(0, SESSION_LEN);
+const solution = v => `${v[0]} – ${disp(v[1])} – ${disp(v[2])}`;
+
+function fakeRegular(v) {
+  const words = v[0].replace(/ \(.*\)/, "").split(" ");
+  words[0] += words[0].endsWith("e") ? "d" : "ed";
+  return words.join(" ");
+}
+
+function quizQuestion(v) {
+  if (Math.random() < 0.6) {
+    const opts = new Set([disp(v[1]), fakeRegular(v)]);
+    if (v[2] !== v[1]) opts.add(disp(v[2]));
+    for (const o of shuffle(VERBS)) { if (opts.size >= 4) break; opts.add(disp(o[1])); }
+    return { type: "choice", verb: v, head: v[0], say: v[0], sub: `${v[3]}<br>Wie heißt das <b>Simple Past</b>?`, options: shuffle([...opts]), answer: disp(v[1]), solution: solution(v) };
+  }
+  const tokens = v[3].split("; ");
+  const others = shuffle(VERBS).filter(o => o !== v && !o[3].split("; ").some(t => tokens.includes(t))).slice(0, 3);
+  return { type: "choice", verb: v, head: v[3], sub: "Wie heißt das auf Englisch?", options: shuffle([v, ...others].map(o => o[0])), answer: v[0], solution: `${v[3]} = ${v[0]}` };
+}
+
+function build(mode) {
+  if (mode === "cards") return pickVerbs().map(v => ({ type: "card", verb: v, head: v[0], say: v[0], sub: v[3], solution: solution(v) }));
+  if (mode === "quiz") return pickVerbs().map(quizQuestion);
+  if (mode === "write") return pickVerbs().map(v => ({
+    type: "input", verb: v, head: v[0], say: v[0], sub: v[3], solution: solution(v),
+    fields: [{ label: "Simple Past (2. Form)", answer: v[1], needAll: v[0] === "be" }]
+      .concat(store.pp ? [{ label: "Past Participle (3. Form)", answer: v[2] }] : [])
+  }));
+  if (mode === "waswere") return shuffle(WAS_WERE).slice(0, SESSION_LEN).map(s => ({
+    type: "choice", sentence: true, head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
+    sub: "Was passt in die Lücke?", options: ["was", "were", "wasn't", "weren't"], answer: s[1], solution: fill(s[0], s[1])
+  }));
+  return shuffle(SENTENCES).slice(0, SESSION_LEN).map(s => {
+    const special = s[1].includes("/");
+    return {
+      type: "input", sentence: true, head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
+      sub: `<span class="hint">${s[1]}</span>`, fields: [{ label: "Was gehört in die Lücke?", answer: s[2] }],
+      solution: fill(s[0], s[2].split("/")[0]),
+      tip: special ? "Merke: Bei Verneinung und Fragen steht <b>did / didn't + Grundform</b>." : ""
+    };
+  });
+}
+
+// ---------- Übungsrunde ----------
+let S;
+function start(mode) {
+  S = { mode, qs: build(mode), i: 0, right: 0, wrong: [] };
+  showQ();
+}
+
+function showQ() {
+  const q = S.qs[S.i];
+  let body = "";
+  if (q.type === "input") {
+    body = `<form id="f" autocomplete="off">
+      ${q.fields.map((f, i) => `<div class="field"><label for="in${i}">${f.label}</label>
+        <input type="text" id="in${i}" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="${i < q.fields.length - 1 ? "next" : "done"}"></div>`).join("")}
+      <button class="btn" id="go">Prüfen</button></form>`;
+  } else if (q.type === "choice") {
+    body = `<div class="opts">${q.options.map(o => `<button class="opt">${o}</button>`).join("")}</div>`;
+  } else {
+    body = `<button class="btn" id="flip">Aufdecken</button>`;
+  }
+  app.innerHTML = `
+    <div class="top">
+      <button class="x" id="quit" aria-label="Beenden">✕</button>
+      <div class="bar"><i style="width:${S.i / S.qs.length * 100}%"></i></div>
+      <span class="count">${S.i + 1} / ${S.qs.length}</span>
+    </div>
+    <div class="card q">
+      <div class="head ${q.sentence ? "sentence" : ""}">${q.head}${q.say ? sayBtn(q.say) : ""}</div>
+      <div class="sub">${q.sub}</div>
+      <div id="extra"></div>
+    </div>
+    ${body}
+    <div id="fb"></div>`;
+  document.getElementById("quit").onclick = home;
+
+  if (q.type === "input") {
+    const inputs = [...app.querySelectorAll("input[type=text]")];
+    inputs[0].focus();
+    document.getElementById("f").onsubmit = e => {
+      e.preventDefault();
+      const empty = inputs.find(i => !i.value.trim());
+      if (empty) { empty.focus(); return; }
+      let ok = true;
+      inputs.forEach((inp, i) => {
+        const good = check(inp.value, q.fields[i].answer, q.fields[i].needAll);
+        inp.classList.add(good ? "ok" : "bad"); inp.readOnly = true;
+        ok = ok && good;
+      });
+      document.getElementById("go").remove();
+      grade(ok);
+    };
+  } else if (q.type === "choice") {
+    const opts = [...app.querySelectorAll(".opt")];
+    opts.forEach(b => b.onclick = () => {
+      const ok = b.textContent === q.answer;
+      opts.forEach(o => { o.disabled = true; if (o.textContent === q.answer) o.classList.add("ok"); });
+      if (!ok) b.classList.add("bad");
+      grade(ok);
+    });
+  } else {
+    document.getElementById("flip").onclick = e => {
+      const v = q.verb;
+      e.target.remove();
+      document.getElementById("extra").innerHTML = `<div class="forms">
+        <div><span>Simple Past</span><b>${disp(v[1])}</b>${sayBtn(v[1])}</div>
+        <div><span>Past Participle</span><b>${disp(v[2])}</b>${sayBtn(v[2])}</div></div>`;
+      document.getElementById("fb").innerHTML = `<div class="row" style="margin-top:12px">
+        <button class="btn ghost" id="no">Nochmal üben</button><button class="btn" id="yes">Wusste ich!</button></div>`;
+      document.getElementById("yes").onclick = () => { record(true); next(); };
+      document.getElementById("no").onclick = () => { record(false); next(); };
+    };
+  }
+  window.scrollTo(0, 0);
+}
+
+function record(ok) {
+  const q = S.qs[S.i];
+  if (ok) S.right++; else S.wrong.push(q.solution);
+  if (q.verb) { store.p[q.verb[0]] = ok ? streak(q.verb) + 1 : 0; save(); }
+}
+
+function grade(ok) {
+  const q = S.qs[S.i];
+  record(ok);
+  const praise = ["Richtig! 🎉", "Super! ⭐", "Genau! 👍", "Perfekt! 💪"];
+  document.getElementById("fb").innerHTML = `
+    <div class="fb ${ok ? "ok" : "bad"}">${ok ? praise[Math.floor(Math.random() * praise.length)] : "Noch nicht ganz."}
+      <small>${q.solution}${!ok && q.tip ? "<br>" + q.tip : ""}</small></div>
+    <button class="btn" id="next">${S.i + 1 < S.qs.length ? "Weiter" : "Ergebnis ansehen"}</button>`;
+  const n = document.getElementById("next");
+  n.onclick = next; n.focus();
+}
+
+function next() {
+  S.i++;
+  if (S.i < S.qs.length) showQ(); else result();
+}
+
+function result() {
+  const total = S.qs.length, r = S.right;
+  const msg = r === total ? "Alles richtig – stark! 🏆" : r >= total * 0.7 ? "Richtig gut! ⭐" : r >= total * 0.4 ? "Schon ganz ordentlich – weiter so! 💪" : "Übung macht den Meister – gleich nochmal! 🌱";
+  app.innerHTML = `
+    <div class="card center">
+      <p class="score">${r} / ${total}</p>
+      <p><b>${msg}</b></p>
+    </div>
+    ${S.wrong.length ? `<div class="card"><h2>Das schaust du dir nochmal an</h2><ul class="miss">${S.wrong.map(w => `<li>${w}</li>`).join("")}</ul></div>` : ""}
+    <button class="btn" id="again">Nochmal</button>
+    <p></p>
+    <button class="btn ghost" id="home">Zur Übersicht</button>`;
+  document.getElementById("again").onclick = () => start(S.mode);
+  document.getElementById("home").onclick = home;
+  window.scrollTo(0, 0);
+}
+
+home();
+</script>
+</body>
+</html>
