@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#6c4cf1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Englisch">
 <title>Englisch-Trainer: Irregular Verbs</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦝</text></svg>">
 <style>
@@ -20,12 +23,18 @@
     }
   }
   * { box-sizing: border-box; }
+  button, input, label { touch-action: manipulation; }
+  button { -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0; background: var(--bg); color: var(--text);
     font: 17px/1.45 ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
     -webkit-text-size-adjust: 100%;
   }
-  #app { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; }
+  #app { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+  @media (min-width: 700px) {
+    body { font-size: 20px; }
+    #app { max-width: 680px; padding-top: 36px; }
+  }
   h1 { font-size: 1.6rem; margin: 4px 0 2px; }
   h2 { font-size: 1.15rem; margin: 0 0 8px; }
   p { margin: 0 0 12px; }
@@ -278,6 +287,15 @@ const SENTENCES = [
   ["___ a good time in London?", "you / have", "did you have"]
 ];
 
+// Dateinamen der Audios – wird auch von tools/gen-audio.js benutzt
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const plain = (sentence, answer) => {
+  let word = answer.split("/")[0];
+  if (sentence.startsWith("___")) word = word[0].toUpperCase() + word.slice(1);
+  return sentence.replace(" (not)", "").replace("___", word);
+};
+
+const VERSION = 2;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -287,6 +305,7 @@ try { store = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
 store.p = store.p || {};          // Verb -> richtige Antworten in Folge
 store.range = store.range || 0;
 store.pp = !!store.pp;
+if (store.sound === undefined) store.sound = true;
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 
 // ---------- Helfer ----------
@@ -312,13 +331,23 @@ function check(input, form, needAll) {
   return parts.length > 0 && parts.every(p => alts.includes(p)) && (!needAll || alts.every(a => parts.includes(a)));
 }
 
+// Spielt die MP3 ab; falls das nicht klappt, liest die Browser-Stimme vor
+const player = new Audio();
+function play(file, text) {
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  player.onerror = () => speak(text);
+  player.src = `audio/${file}.mp3`;
+  const p = player.play();
+  if (p) p.catch(() => {});
+}
 function speak(text) {
-  if (!("speechSynthesis" in window)) return;
+  if (!text || !("speechSynthesis" in window)) return;
   const u = new SpeechSynthesisUtterance(text.replace(/[()\/]/g, " "));
   u.lang = "en-GB"; u.rate = 0.9;
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
-const sayBtn = text => "speechSynthesis" in window ? `<button type="button" class="say" data-say="${text}" aria-label="Anhören">🔊</button>` : "";
+const vAudio = (v, i) => `v/${slug(v[0])}-${i}`;
+const sayBtn = (file, text) => `<button type="button" class="say" data-audio="${file}" data-say="${text}" aria-label="Anhören">🔊</button>`;
 const fill = (sentence, word) => {
   if (sentence.startsWith("___")) word = word[0].toUpperCase() + word.slice(1);
   return sentence.replace(/ \(not\)/, "").replace("___", `<span class="blank">${word || "&nbsp;"}</span>`);
@@ -326,7 +355,7 @@ const fill = (sentence, word) => {
 
 app.addEventListener("click", e => {
   const b = e.target.closest("[data-say]");
-  if (b) { e.stopPropagation(); speak(b.dataset.say); }
+  if (b) { e.stopPropagation(); play(b.dataset.audio, b.dataset.say); }
 });
 
 // ---------- Startseite ----------
@@ -359,11 +388,16 @@ function home() {
     ${grammar.map(btn).join("")}
     <div class="section">Nachschlagen</div>
     <button class="mode" data-mode="list"><span class="ico">📖</span><span><b>Alle Verben</b><span class="muted">Die ganze Liste zum Nachlesen</span></span></button>
-    <p class="center"><button class="link" id="reset">Fortschritt zurücksetzen</button></p>`;
+    <div class="section">Einstellungen</div>
+    <label class="check"><input type="checkbox" id="sound" ${store.sound ? "checked" : ""}> Lösung nach jeder Antwort vorlesen 🔊</label>
+    <p class="center" style="margin-top:20px"><button class="link" id="reset">Fortschritt zurücksetzen</button></p>
+    <p class="center muted">Version ${VERSION}</p>`;
+  store.session = null; save();
 
   app.querySelectorAll("[data-range]").forEach(b => b.onclick = () => { store.range = +b.dataset.range; save(); home(); });
   app.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => b.dataset.mode === "list" ? list() : start(b.dataset.mode));
   document.getElementById("pp").onchange = e => { store.pp = e.target.checked; save(); };
+  document.getElementById("sound").onchange = e => { store.sound = e.target.checked; save(); };
   document.getElementById("reset").onclick = () => { if (confirm("Wirklich den ganzen Fortschritt löschen?")) { store.p = {}; save(); home(); } };
   window.scrollTo(0, 0);
 }
@@ -384,6 +418,8 @@ function list() {
 // Schwächste Verben zuerst, bei Gleichstand zufällig
 const pickVerbs = () => shuffle(pool()).sort((a, b) => streak(a) - streak(b)).slice(0, SESSION_LEN);
 const solution = v => `${v[0]} – ${disp(v[1])} – ${disp(v[2])}`;
+const verbAudio = v => ({ audio: vAudio(v, "all"), sayText: `${v[0]}, ${v[1]}, ${v[2]}` });
+const sentenceAudio = (s, answer) => ({ audio: "s/" + slug(plain(s, answer)), sayText: plain(s, answer) });
 
 function fakeRegular(v) {
   const words = v[0].replace(/ \(.*\)/, "").split(" ");
@@ -396,29 +432,29 @@ function quizQuestion(v) {
     const opts = new Set([disp(v[1]), fakeRegular(v)]);
     if (v[2] !== v[1]) opts.add(disp(v[2]));
     for (const o of shuffle(VERBS)) { if (opts.size >= 4) break; opts.add(disp(o[1])); }
-    return { type: "choice", verb: v, head: v[0], say: v[0], sub: `${v[3]}<br>Wie heißt das <b>Simple Past</b>?`, options: shuffle([...opts]), answer: disp(v[1]), solution: solution(v) };
+    return { type: "choice", verb: v, ...verbAudio(v), head: v[0], say: v[0], sub: `${v[3]}<br>Wie heißt das <b>Simple Past</b>?`, options: shuffle([...opts]), answer: disp(v[1]), solution: solution(v) };
   }
   const tokens = v[3].split("; ");
   const others = shuffle(VERBS).filter(o => o !== v && !o[3].split("; ").some(t => tokens.includes(t))).slice(0, 3);
-  return { type: "choice", verb: v, head: v[3], sub: "Wie heißt das auf Englisch?", options: shuffle([v, ...others].map(o => o[0])), answer: v[0], solution: `${v[3]} = ${v[0]}` };
+  return { type: "choice", verb: v, audio: vAudio(v, 0), sayText: v[0], head: v[3], sub: "Wie heißt das auf Englisch?", options: shuffle([v, ...others].map(o => o[0])), answer: v[0], solution: `${v[3]} = ${v[0]}` };
 }
 
 function build(mode) {
-  if (mode === "cards") return pickVerbs().map(v => ({ type: "card", verb: v, head: v[0], say: v[0], sub: v[3], solution: solution(v) }));
+  if (mode === "cards") return pickVerbs().map(v => ({ type: "card", verb: v, ...verbAudio(v), head: v[0], say: v[0], sub: v[3], solution: solution(v) }));
   if (mode === "quiz") return pickVerbs().map(quizQuestion);
   if (mode === "write") return pickVerbs().map(v => ({
-    type: "input", verb: v, head: v[0], say: v[0], sub: v[3], solution: solution(v),
+    type: "input", verb: v, ...verbAudio(v), head: v[0], say: v[0], sub: v[3], solution: solution(v),
     fields: [{ label: "Simple Past (2. Form)", answer: v[1], needAll: v[0] === "be" }]
       .concat(store.pp ? [{ label: "Past Participle (3. Form)", answer: v[2] }] : [])
   }));
   if (mode === "waswere") return shuffle(WAS_WERE).slice(0, SESSION_LEN).map(s => ({
-    type: "choice", sentence: true, head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
+    type: "choice", sentence: true, ...sentenceAudio(s[0], s[1]), head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
     sub: "Was passt in die Lücke?", options: ["was", "were", "wasn't", "weren't"], answer: s[1], solution: fill(s[0], s[1])
   }));
   return shuffle(SENTENCES).slice(0, SESSION_LEN).map(s => {
     const special = s[1].includes("/");
     return {
-      type: "input", sentence: true, head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
+      type: "input", sentence: true, ...sentenceAudio(s[0], s[2]), head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
       sub: `<span class="hint">${s[1]}</span>`, fields: [{ label: "Was gehört in die Lücke?", answer: s[2] }],
       solution: fill(s[0], s[2].split("/")[0]),
       tip: special ? "Merke: Bei Verneinung und Fragen steht <b>did / didn't + Grundform</b>." : ""
@@ -435,6 +471,7 @@ function start(mode) {
 
 function showQ() {
   const q = S.qs[S.i];
+  store.session = S; save();   // nach einem Neuladen geht es an derselben Stelle weiter
   let body = "";
   if (q.type === "input") {
     body = `<form id="f" autocomplete="off">
@@ -453,7 +490,7 @@ function showQ() {
       <span class="count">${S.i + 1} / ${S.qs.length}</span>
     </div>
     <div class="card q">
-      <div class="head ${q.sentence ? "sentence" : ""}">${q.head}${q.say ? sayBtn(q.say) : ""}</div>
+      <div class="head ${q.sentence ? "sentence" : ""}">${q.head}${q.say ? sayBtn(vAudio(q.verb, 0), q.say) : ""}</div>
       <div class="sub">${q.sub}</div>
       <div id="extra"></div>
     </div>
@@ -490,8 +527,9 @@ function showQ() {
       const v = q.verb;
       e.target.remove();
       document.getElementById("extra").innerHTML = `<div class="forms">
-        <div><span>Simple Past</span><b>${disp(v[1])}</b>${sayBtn(v[1])}</div>
-        <div><span>Past Participle</span><b>${disp(v[2])}</b>${sayBtn(v[2])}</div></div>`;
+        <div><span>Simple Past</span><b>${disp(v[1])}</b>${sayBtn(vAudio(v, 1), v[1])}</div>
+        <div><span>Past Participle</span><b>${disp(v[2])}</b>${sayBtn(vAudio(v, 2), v[2])}</div></div>`;
+      if (store.sound) play(q.audio, q.sayText);
       document.getElementById("fb").innerHTML = `<div class="row" style="margin-top:12px">
         <button class="btn ghost" id="no">Nochmal üben</button><button class="btn" id="yes">Wusste ich!</button></div>`;
       document.getElementById("yes").onclick = () => { record(true); next(); };
@@ -510,10 +548,11 @@ function record(ok) {
 function grade(ok) {
   const q = S.qs[S.i];
   record(ok);
+  if (store.sound) play(q.audio, q.sayText);
   const praise = ["Richtig! 🎉", "Super! ⭐", "Genau! 👍", "Perfekt! 💪"];
   document.getElementById("fb").innerHTML = `
     <div class="fb ${ok ? "ok" : "bad"}">${ok ? praise[Math.floor(Math.random() * praise.length)] : "Noch nicht ganz."}
-      <small>${q.solution}${!ok && q.tip ? "<br>" + q.tip : ""}</small></div>
+      <small>${q.solution} ${sayBtn(q.audio, q.sayText)}${!ok && q.tip ? "<br>" + q.tip : ""}</small></div>
     <button class="btn" id="next">${S.i + 1 < S.qs.length ? "Weiter" : "Ergebnis ansehen"}</button>`;
   const n = document.getElementById("next");
   n.onclick = next; n.focus();
@@ -526,6 +565,7 @@ function next() {
 
 function result() {
   const total = S.qs.length, r = S.right;
+  store.session = null; save();
   const msg = r === total ? "Alles richtig – stark! 🏆" : r >= total * 0.7 ? "Richtig gut! ⭐" : r >= total * 0.4 ? "Schon ganz ordentlich – weiter so! 💪" : "Übung macht den Meister – gleich nochmal! 🌱";
   app.innerHTML = `
     <div class="card center">
@@ -541,7 +581,8 @@ function result() {
   window.scrollTo(0, 0);
 }
 
-home();
+if (store.session && store.session.qs && store.session.i < store.session.qs.length) { S = store.session; showQ(); }
+else home();
 </script>
 </body>
 </html>
