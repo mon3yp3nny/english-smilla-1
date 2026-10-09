@@ -14,13 +14,13 @@
   :root {
     --bg: #f4f2fb; --card: #ffffff; --text: #1f1b2e; --muted: #6b6780;
     --line: #e3dff0; --accent: #6c4cf1; --accent-soft: #ece7ff;
-    --ok: #1a9c5b; --ok-soft: #dcf5e7; --bad: #d63a4a; --bad-soft: #fde3e6;
+    --ok: #1a9c5b; --ok-soft: #dcf5e7; --ok-mid: #a6e3c2; --bad: #d63a4a; --bad-soft: #fde3e6; --bad-mid: #f6b1ba;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #15131f; --card: #211e30; --text: #f1eefb; --muted: #a29dba;
       --line: #35304a; --accent: #9c85ff; --accent-soft: #2e2850;
-      --ok: #4fd08f; --ok-soft: #173a2a; --bad: #ff7a88; --bad-soft: #45202a;
+      --ok: #4fd08f; --ok-soft: #173a2a; --ok-mid: #20603f; --bad: #ff7a88; --bad-soft: #45202a; --bad-mid: #742c3b;
     }
   }
   * { box-sizing: border-box; }
@@ -116,6 +116,12 @@
   .forms div { background: var(--accent-soft); border-radius: 12px; padding: 10px 14px; }
   .forms span { display: block; font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
   .forms b { font-size: 1.2rem; }
+  .rules { margin-top: 16px; font-size: .95rem; }
+  .rules summary { font-weight: 700; color: var(--accent); cursor: pointer; }
+  .rules .forms { margin-top: 10px; }
+  .rules i { color: var(--muted); }
+  .rules ul { padding-left: 20px; margin: 14px 0 0; }
+  .rules li { margin: 8px 0; }
 
   .score { font-size: 3rem; font-weight: 800; text-align: center; margin: 6px 0 0; }
   .center { text-align: center; }
@@ -133,6 +139,13 @@
   td.de { color: var(--muted); }
   tr[data-say] { cursor: pointer; }
   td[data-say]:active { background: var(--accent-soft); }
+  /* Lernstand in fünf Stufen: oft falsch, falsch, (neu), sicher, sehr sicher */
+  .m2, tr.m2 td { background: var(--bad-mid); }
+  .m1, tr.m1 td { background: var(--bad-soft); }
+  .p1, tr.p1 td { background: var(--ok-soft); }
+  .p2, tr.p2 td { background: var(--ok-mid); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; font-size: .78rem; }
+  .legend span { padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); }
   tr.now td { background: var(--accent-soft); }
   .tour { position: sticky; bottom: calc(14px + env(safe-area-inset-bottom)); text-align: center; margin-top: 16px; pointer-events: none; }
   .tour .btn, .st-ctl .btn { display: inline-block; margin: 0 3px; width: auto; padding: 16px 30px; font-size: 1.2rem; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
@@ -239,28 +252,28 @@ const RANGES = [
   ["smell – write", 54, 70]
 ];
 
-// to be im Simple Past: [Satz, Lösung]
+// to be im Simple Past: [Satz, Lösung, Erklärung]
 const WAS_WERE = [
-  ["I ___ at home yesterday.", "was"],
-  ["We ___ at the cinema last night.", "were"],
-  ["My sister ___ ill last week.", "was"],
-  ["The children ___ very tired after the trip.", "were"],
-  ["It ___ cold and rainy on Monday.", "was"],
-  ["You ___ late for school this morning.", "were"],
-  ["Tom and Lisa ___ in London last summer.", "were"],
-  ["The film ___ really funny.", "was"],
-  ["He ___ (not) at school yesterday.", "wasn't"],
-  ["They ___ (not) happy about the test.", "weren't"],
-  ["___ you at the party on Saturday?", "were"],
-  ["___ the test difficult?", "was"],
-  ["Where ___ you last weekend?", "were"],
-  ["My grandparents ___ (not) at home.", "weren't"],
-  ["The weather ___ (not) very good.", "wasn't"],
-  ["I ___ eleven last year.", "was"],
-  ["___ your friends at the match?", "were"],
-  ["The shops ___ (not) open on Sunday.", "weren't"],
-  ["My dog ___ (not) in the garden.", "wasn't"],
-  ["Who ___ your first teacher?", "was"]
+  ["I ___ at home yesterday.", "was", "Bei <b>I</b> steht immer <b>was</b>: I was."],
+  ["We ___ at the cinema last night.", "were", "<b>We</b> sind mehrere → <b>were</b>: we were."],
+  ["My sister ___ ill last week.", "was", "<b>My sister</b> = she (eine Person) → <b>was</b>."],
+  ["The children ___ very tired after the trip.", "were", "<b>The children</b> = they (mehrere) → <b>were</b>."],
+  ["It ___ cold and rainy on Monday.", "was", "Bei <b>it</b> steht <b>was</b>: it was."],
+  ["You ___ late for school this morning.", "were", "Bei <b>you</b> steht immer <b>were</b> – auch wenn nur eine Person gemeint ist."],
+  ["Tom and Lisa ___ in London last summer.", "were", "<b>Tom and Lisa</b> = they (zwei Personen) → <b>were</b>."],
+  ["The film ___ really funny.", "was", "<b>The film</b> = it (eine Sache) → <b>was</b>."],
+  ["He ___ (not) at school yesterday.", "wasn't", "<b>He</b> → was. Mit not wird daraus <b>wasn't</b> (= was not)."],
+  ["They ___ (not) happy about the test.", "weren't", "<b>They</b> → were. Mit not wird daraus <b>weren't</b> (= were not)."],
+  ["___ you at the party on Saturday?", "were", "In Fragen steht was/were vorne. Bei <b>you</b> immer were: <b>Were you</b> …?"],
+  ["___ the test difficult?", "was", "In Fragen steht was/were vorne. <b>The test</b> = it (eine Sache) → <b>Was the test</b> …?"],
+  ["Where ___ you last weekend?", "were", "Nach dem Fragewort kommt was/were. Bei <b>you</b> immer were: Where <b>were you</b>?"],
+  ["My grandparents ___ (not) at home.", "weren't", "<b>My grandparents</b> = they (mehrere) → were. Mit not: <b>weren't</b>."],
+  ["The weather ___ (not) very good.", "wasn't", "<b>The weather</b> = it (eine Sache) → was. Mit not: <b>wasn't</b>."],
+  ["I ___ eleven last year.", "was", "Bei <b>I</b> steht immer <b>was</b>. Das Alter sagt man mit to be: I was eleven = ich war elf."],
+  ["___ your friends at the match?", "were", "In Fragen steht was/were vorne. <b>Your friends</b> = they (mehrere) → <b>Were your friends</b> …?"],
+  ["The shops ___ (not) open on Sunday.", "weren't", "<b>The shops</b> = they (mehrere) → were. Mit not: <b>weren't</b>."],
+  ["My dog ___ (not) in the garden.", "wasn't", "<b>My dog</b> = it (ein Tier) → was. Mit not: <b>wasn't</b>."],
+  ["Who ___ your first teacher?", "was", "Nach <b>Who</b> steht <b>was</b>, wenn nach einer Person gefragt wird: Who was …?"]
 ];
 
 // Sätze im Simple Past: [Satz, Hinweis, Lösung]
@@ -357,7 +370,7 @@ const example = v => {
   return [v[0] === "be" ? "am" : f(0), f(1), "have " + f(2)].map(t => "I " + t);
 };
 
-const VERSION = 16;
+const VERSION = 18;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -365,6 +378,7 @@ const KEY = "irregular-verbs-v1";
 let store = {};
 try { store = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
 store.p = store.p || {};          // Verb -> richtige Antworten in Folge
+store.m = store.m || {};          // Verb -> Fehlerzähler: +1 bei falsch, -1 bei richtig (nie unter 0)
 store.range = store.range || 0;
 store.pp = !!store.pp;
 store.sel = (store.sel || []).filter(n => VERBS.some(v => v[0] === n));   // in der Liste angekreuzte Verben (Infinitive)
@@ -379,6 +393,11 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 const disp = form => form.split("/").join(", ");
 const streak = v => store.p[v[0]] || 0;
 const isDone = v => streak(v) >= 2;
+// Lernstand in fünf Stufen für die Liste: -2 oft falsch, -1 falsch, 0 neu, 1 sicher, 2 sehr sicher
+const level = v => {
+  const s = streak(v), m = store.m[v[0]] || 0;
+  return s >= 4 ? 2 : s >= 2 ? 1 : m >= 3 ? -2 : m >= 1 || store.p[v[0]] === 0 ? -1 : 0;
+};
 const pool = () => VERBS.slice(RANGES[store.range][1], RANGES[store.range][2]);
 
 function norm(s) {
@@ -471,7 +490,7 @@ function home() {
   document.getElementById("pp").onchange = e => { store.pp = e.target.checked; save(); };
   document.getElementById("sound").onchange = e => { store.sound = e.target.checked; save(); };
   document.getElementById("reload").onclick = () => location.reload();
-  document.getElementById("reset").onclick = () => { if (confirm("Wirklich den ganzen Fortschritt löschen?")) { store.p = {}; save(); home(); } };
+  document.getElementById("reset").onclick = () => { if (confirm("Wirklich den ganzen Fortschritt löschen?")) { store.p = {}; store.m = {}; save(); home(); } };
   window.scrollTo(0, 0);
 }
 
@@ -561,9 +580,10 @@ function list() {
   app.innerHTML = `
     <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
     <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste. Kreuze Verben an ☑️, dann hörst du nur diese – immer wieder von vorn 🔁.</p>
+    <div class="legend"><span class="m2">oft falsch</span><span class="m1">falsch</span><span>neu</span><span class="p1">sicher</span><span class="p2">sehr sicher</span></div>
     <table>
       <tr><th class="pick"><button class="link" id="clearSel" aria-label="Auswahl aufheben" hidden>✕</button></th><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
-      ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}"><td class="pick"><label><input type="checkbox" value="${v[0]}" aria-label="${v[0]} auswählen" ${store.sel.includes(v[0]) ? "checked" : ""}></label></td>${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
+      ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""} ${["m2", "m1", "", "p1", "p2"][level(v) + 2]}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}"><td class="pick"><label><input type="checkbox" value="${v[0]}" aria-label="${v[0]} auswählen" ${store.sel.includes(v[0]) ? "checked" : ""}></label></td>${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
     </table>
     <div class="tour"><button class="btn ghost" data-tour="reset" hidden>⏮ Von vorn</button><button class="btn" data-tour="toggle">▶️ Alle vorlesen</button></div>
     <div class="stage" id="stage" hidden>
@@ -656,7 +676,7 @@ function build(mode) {
   }));
   if (mode === "exam") {
     const sent = shuffle(SENTENCES), special = s => s[1].includes("/");   // immer auch eine Verneinung oder Frage
-    return [...build("waswere").slice(0, 3), ...build("vocab").slice(0, 5), ...[...sent.filter(s => !special(s)).slice(0, 3), sent.find(special)].map(sentenceQ)];
+    return [...build("waswere").slice(0, 3).map(q => ({ ...q, rules: false })), ...build("vocab").slice(0, 5), ...[...sent.filter(s => !special(s)).slice(0, 3), sent.find(special)].map(sentenceQ)];
   }
   if (mode === "vocab") return pickVerbs().map(v => ({
     type: "input", tip: verbTip(v), sentence: true, verb: v, ...verbAudio(v), head: v[3], sub: "Wie heißt das Verb auf Englisch?", solution: solution(v),
@@ -670,7 +690,8 @@ function build(mode) {
   }));
   if (mode === "waswere") return shuffle(WAS_WERE).slice(0, SESSION_LEN).map(s => ({
     type: "choice", sentence: true, ...sentenceAudio(s[0], s[1]), head: s[0].replace("___", '<span class="blank">&nbsp;</span>'),
-    sub: "Was passt in die Lücke?", options: ["was", "were", "wasn't", "weren't"], answer: s[1], solution: fill(s[0], s[1])
+    sub: "Was passt in die Lücke?", options: ["was", "were", "wasn't", "weren't"], answer: s[1], solution: fill(s[0], s[1]),
+    tip: "Merke: " + s[2], rules: true
   }));
   return shuffle(SENTENCES).slice(0, SESSION_LEN).map(sentenceQ);
 }
@@ -686,6 +707,20 @@ function sentenceQ(s) {
 
 // ---------- Übungsrunde ----------
 let S;
+// Merkzettel für "was oder were?" – steht aufklappbar unter den Fragen
+const RULES = `
+  <p><b>was</b> und <b>were</b> sind das Simple Past von <b>to be</b> (sein): ich <u>war</u>, du <u>warst</u>, wir <u>waren</u> …</p>
+  <div class="forms">
+    <div><span>I · he · she · it</span><b>was</b><br>I was at home. <i>– Ich war zu Hause.</i><br>My sister was ill. <i>– Meine Schwester war krank.</i></div>
+    <div><span>you · we · they</span><b>were</b><br>We were at the cinema. <i>– Wir waren im Kino.</i><br>The children were tired. <i>– Die Kinder waren müde.</i></div>
+  </div>
+  <ul>
+    <li><b>Eine</b> Person oder Sache (my sister = she, the film = it) → <b>was</b>.<br><b>Mehrere</b> (the children, Tom and Lisa = they) → <b>were</b>.</li>
+    <li>Bei <b>you</b> immer <b>were</b>, auch bei nur einer Person:<br>You were late. <i>– Du warst zu spät.</i></li>
+    <li>Mit <b>not</b> (Verneinung): <b>wasn't</b> = was not, <b>weren't</b> = were not.<br>He wasn't at school. <i>– Er war nicht in der Schule.</i></li>
+    <li>In <b>Fragen</b> steht was/were vorne:<br>Were you at the party? <i>– Warst du auf der Party?</i><br>Where were you? <i>– Wo warst du?</i></li>
+  </ul>`;
+
 function start(mode) {
   S = { mode, qs: build(mode), i: 0, right: 0, wrong: [] };
   S.total = S.qs.length;
@@ -719,7 +754,8 @@ function showQ() {
       <div id="extra"></div>
     </div>
     ${body}
-    <div id="fb"></div>`;
+    <div id="fb"></div>
+    ${q.rules ? `<details class="card rules" ${S.i === 0 ? "open" : ""}><summary>💡 Wann was, wann were?</summary>${RULES}</details>` : ""}`;
   document.getElementById("quit").onclick = home;
 
   if (q.type === "input") {
@@ -773,7 +809,12 @@ function record(ok) {
   if (!q.retry) {
     if (ok) S.right++; else { S.wrong.push(q.solution); S.qs.push({ ...q, retry: true }); }
   }
-  if (q.verb && !(q.retry && ok)) { store.p[q.verb[0]] = ok ? streak(q.verb) + 1 : 0; save(); }
+  if (q.verb && !(q.retry && ok)) {
+    const name = q.verb[0];
+    store.p[name] = ok ? streak(q.verb) + 1 : 0;
+    store.m[name] = Math.max(0, (store.m[name] || 0) + (ok ? -1 : 1));
+    save();
+  }
 }
 
 function grade(ok) {

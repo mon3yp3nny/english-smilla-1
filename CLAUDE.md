@@ -40,7 +40,7 @@ Missed questions are appended to the end of the running session with `retry: tru
 
 ### Persistence
 
-Everything lives in one `localStorage` entry (`KEY`): per-verb streaks in `store.p` (a verb counts as mastered at a streak of 2), the settings, and the entire in-progress session object `store.session`, which is restored on load so a reload resumes at the same question. Because the session is round-tripped through JSON, question objects must stay plain serializable data: no functions or DOM nodes, and `q.verb` is a copy after reload, not a reference into `VERBS`. Changing the shape of question objects can break a session saved by an older version.
+Everything lives in one `localStorage` entry (`KEY`): per-verb streaks in `store.p` (a verb counts as mastered at a streak of 2), per-verb miss counters in `store.m` (+1 per wrong answer, -1 per right one; with the streak they give the five colour levels in the verb list, see `level()`), the settings, and the entire in-progress session object `store.session`, which is restored on load so a reload resumes at the same question. Because the session is round-tripped through JSON, question objects must stay plain serializable data: no functions or DOM nodes, and `q.verb` is a copy after reload, not a reference into `VERBS`. Changing the shape of question objects can break a session saved by an older version.
 
 ### Version number
 
