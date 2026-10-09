@@ -125,7 +125,11 @@
   table { width: 100%; border-collapse: collapse; font-size: .88rem; }
   th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 6px 4px; position: sticky; top: 0; background: var(--bg); }
   td { padding: 8px 4px; border-top: 1px solid var(--line); vertical-align: top; }
-  td:first-child { font-weight: 700; }
+  td:nth-child(2) { font-weight: 700; }
+  th.pick, td.pick { width: 36px; padding: 0; }
+  td.pick label { display: block; padding: 8px 8px 8px 2px; cursor: pointer; }
+  td.pick input { display: block; width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+  th.pick .link { padding: 4px 8px 4px 4px; font-size: 1rem; text-decoration: none; }
   td.de { color: var(--muted); }
   tr[data-say] { cursor: pointer; }
   td[data-say]:active { background: var(--accent-soft); }
@@ -143,7 +147,7 @@
   .st-line { font-weight: 800; line-height: 1.2; white-space: nowrap; }
   .st-top.on, .st-line.on { color: var(--accent); }
   .st-line.off { visibility: hidden; }
-  tr.done td:first-child::after { content: " ✓"; color: var(--ok); }
+  tr.done td:nth-child(2)::after { content: " ✓"; color: var(--ok); }
   .link { border: 0; background: none; color: var(--muted); text-decoration: underline; font-size: .85rem; padding: 8px; }
 </style>
 </head>
@@ -353,7 +357,7 @@ const example = v => {
   return [v[0] === "be" ? "am" : f(0), f(1), "have " + f(2)].map(t => "I " + t);
 };
 
-const VERSION = 15;
+const VERSION = 16;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -363,6 +367,7 @@ try { store = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
 store.p = store.p || {};          // Verb -> richtige Antworten in Folge
 store.range = store.range || 0;
 store.pp = !!store.pp;
+store.sel = (store.sel || []).filter(n => VERBS.some(v => v[0] === n));   // in der Liste angekreuzte Verben (Infinitive)
 if (store.sound === undefined) store.sound = true;
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 // Bittet den Browser, den Fortschritt auch bei wenig Speicherplatz nicht zu löschen
@@ -473,7 +478,9 @@ function home() {
 // ---------- Liste ----------
 // "Alle vorlesen": je Verb zwei Vollbild-Seiten – deutsches Wort mit den drei Formen,
 // dann ein Beispiel ("ich bin" – "I am", "I was", "I have been"). Jede Zeile hat ihre eigene Aufnahme.
-let tour = 0, tourAt = 0, tourTimer;   // tour = Nummer des laufenden Durchgangs (0 = aus), tourAt = aktuelles Verb
+// Sind in der Liste Verben angekreuzt, werden nur diese vorgelesen – in einer Schleife, bis man Pause drückt.
+let tour = 0, tourAt = 0, tourTimer;   // tour = Nummer des laufenden Durchgangs (0 = aus), tourAt = aktuelle Stelle in tourQ
+let tourQ = [];                        // Verb-Indizes, die der Durchgang vorliest
 let stageOpen = false, wake = null;
 // Seite: [deutsche Überschrift, Datei dazu, [[Anzeige, Datei, Text für die Browser-Stimme], ...]]
 const pages = v => [
@@ -488,7 +495,10 @@ function keepAwake(on) {
   } catch (e) {}
 }
 function tourUI() {
-  app.querySelectorAll("[data-tour=toggle]").forEach(b => b.textContent = tour ? "⏸ Pause" : tourAt ? "▶️ Weiter" : "▶️ Alle vorlesen");
+  const n = store.sel.length;
+  app.querySelectorAll("[data-tour=toggle]").forEach(b => b.textContent = tour ? "⏸ Pause" : tourAt ? "▶️ Weiter" : n ? `🔁 ${n} ${n > 1 ? "Verben" : "Verb"} anhören` : "▶️ Alle vorlesen");
+  const clear = document.getElementById("clearSel");
+  if (clear) clear.hidden = !n;
   app.querySelectorAll("[data-tour=reset]").forEach(b => b.hidden = !!tour || !tourAt);
   const st = document.getElementById("stage");
   if (st) st.hidden = !stageOpen;
@@ -496,7 +506,7 @@ function tourUI() {
 // k = Zeile, die gerade gesprochen wird (-1 = die deutsche Überschrift); spätere Zeilen sind noch unsichtbar
 function showStage(i, p, k) {
   const [top, , lines] = pages(VERBS[i])[p], len = Math.max(...lines.map(l => l[0].length));
-  document.getElementById("stCount").textContent = `${i + 1} / ${VERBS.length}`;
+  document.getElementById("stCount").textContent = `${store.sel.length ? "🔁 " : ""}${tourAt + 1} / ${tourQ.length}`;
   const body = document.getElementById("stBody");
   body.style.fontSize = `min(14vh, ${Math.min(24, 170 / len).toFixed(1)}vw)`;
   body.innerHTML = `<div class="st-top ${k < 0 ? "on" : ""}">${top}</div>` +
@@ -519,11 +529,13 @@ function resetTour() {
 function startTour() {
   const id = tour = Date.now(), rows = [...app.querySelectorAll("tr[data-say]")];
   const wait = (ms, fn) => () => { if (tour === id) tourTimer = setTimeout(() => { if (tour === id) fn(); }, ms); };
-  const step = i => {
+  const loop = store.sel.length > 0;
+  tourQ = VERBS.map((v, i) => i).filter(i => !loop || store.sel.includes(VERBS[i][0]));
+  const step = n => {
     rows.forEach(r => r.classList.remove("now"));
-    if (i >= VERBS.length) return resetTour();
-    const v = VERBS[i];
-    tourAt = i;
+    if (n >= tourQ.length) { if (!loop) return resetTour(); n = 0; }
+    const i = tourQ[n], v = VERBS[i];
+    tourAt = n;
     rows[i].classList.add("now");
     rows[i].scrollIntoView({ block: "center" });
     // [Seite, Zeile, Datei, Text für die Browser-Stimme, Sprache, Pause danach]
@@ -531,11 +543,11 @@ function startTour() {
       [p, -1, file, top, "de-DE", 400],
       ...lines.map((l, k) => [p, k, l[1], l[2], "", k < 2 ? 350 : p ? 1400 : 900])
     ]);
-    const run = n => {
-      if (n >= clips.length) return step(i + 1);
-      const [p, k, file, text, lang, gap] = clips[n];
+    const run = c => {
+      if (c >= clips.length) return step(n + 1);
+      const [p, k, file, text, lang, gap] = clips[c];
       showStage(i, p, k);
-      play(vAudio(v, file), text, wait(gap, () => run(n + 1)), lang);
+      play(vAudio(v, file), text, wait(gap, () => run(c + 1)), lang);
     };
     run(0);
   };
@@ -548,10 +560,10 @@ function startTour() {
 function list() {
   app.innerHTML = `
     <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
-    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste.</p>
+    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste. Kreuze Verben an ☑️, dann hörst du nur diese – immer wieder von vorn 🔁.</p>
     <table>
-      <tr><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
-      ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}">${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
+      <tr><th class="pick"><button class="link" id="clearSel" aria-label="Auswahl aufheben" hidden>✕</button></th><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
+      ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}"><td class="pick"><label><input type="checkbox" value="${v[0]}" aria-label="${v[0]} auswählen" ${store.sel.includes(v[0]) ? "checked" : ""}></label></td>${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
     </table>
     <div class="tour"><button class="btn ghost" data-tour="reset" hidden>⏮ Von vorn</button><button class="btn" data-tour="toggle">▶️ Alle vorlesen</button></div>
     <div class="stage" id="stage" hidden>
@@ -564,6 +576,13 @@ function list() {
   document.getElementById("back").onclick = () => { resetTour(); home(); };
   const act = { toggle: () => tour ? pauseTour() : startTour(), reset: () => { resetTour(); startTour(); }, close: () => { pauseTour(); stageOpen = false; tourUI(); } };
   app.querySelectorAll("[data-tour]").forEach(b => b.onclick = act[b.dataset.tour]);
+  // Ankreuzen: eine geänderte Auswahl fängt wieder beim ersten Verb an
+  const boxes = [...app.querySelectorAll("td.pick input")];
+  const pick = () => { resetTour(); store.sel = boxes.filter(b => b.checked).map(b => b.value); save(); tourUI(); };
+  app.querySelector("table").onclick = e => { if (e.target.closest(".pick")) e.stopPropagation(); };   // kein Vorlesen beim Ankreuzen
+  boxes.forEach(b => b.onchange = pick);
+  document.getElementById("clearSel").onclick = () => { boxes.forEach(b => b.checked = false); pick(); };
+  tourUI();
   window.scrollTo(0, 0);
 }
 
