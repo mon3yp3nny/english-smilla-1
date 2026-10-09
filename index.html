@@ -144,8 +144,14 @@
   .m1, tr.m1 td { background: var(--bad-soft); }
   .p1, tr.p1 td { background: var(--ok-soft); }
   .p2, tr.p2 td { background: var(--ok-mid); }
-  .legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; font-size: .78rem; }
-  .legend span { padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); }
+  /* Farb-Knöpfe über der Liste: behalten ihre Farbe, angekreuzt bekommen sie einen Rand */
+  .legend { margin: 0 0 12px; }
+  .legend .chip.on { background: var(--card); color: var(--text); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .legend .chip.m2 { background: var(--bad-mid); }
+  .legend .chip.m1 { background: var(--bad-soft); }
+  .legend .chip.p1 { background: var(--ok-soft); }
+  .legend .chip.p2 { background: var(--ok-mid); }
+  .legend .chip:disabled { opacity: .45; }
   tr.now td { background: var(--accent-soft); }
   .tour { position: sticky; bottom: calc(14px + env(safe-area-inset-bottom)); text-align: center; margin-top: 16px; pointer-events: none; }
   .tour .btn, .st-ctl .btn { display: inline-block; margin: 0 3px; width: auto; padding: 16px 30px; font-size: 1.2rem; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
@@ -369,7 +375,7 @@ const example = v => {
   return [v[0] === "be" ? "am" : f(0), f(1), "have " + f(2)].map(t => "I " + t);
 };
 
-const VERSION = 19;
+const VERSION = 20;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -583,9 +589,12 @@ function startTour() {
 function list() {
   app.innerHTML = `
     <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
-    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste. Kreuze Verben an ☑️, dann übst und hörst du nur diese – das Vorlesen läuft dann immer wieder von vorn 🔁.</p>
+    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste. Kreuze Verben an ☑️ – einzeln oder mit den Knöpfen für Gruppen und Farben –, dann übst und hörst du nur diese – das Vorlesen läuft dann immer wieder von vorn 🔁.</p>
     <div class="chips">${RANGES.map((r, i) => `<button class="chip" data-group="${i}">${r[0]}</button>`).join("")}</div>
-    <div class="legend"><span class="m2">oft falsch</span><span class="m1">falsch</span><span>neu</span><span class="p1">sicher</span><span class="p2">sehr sicher</span></div>
+    <div class="chips legend">${[["m2", "oft falsch"], ["m1", "falsch"], ["", "neu"], ["p1", "sicher"], ["p2", "sehr sicher"]].map(([c, name], i) => {
+      const n = VERBS.filter(v => level(v) === i - 2).length;
+      return `<button class="chip ${c}" data-level="${i - 2}" ${n ? "" : "disabled"}>${name} <small>${n}</small></button>`;
+    }).join("")}</div>
     <table>
       <tr><th class="pick"><button class="link" id="clearSel" aria-label="Auswahl aufheben" hidden>✕</button></th><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
       ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""} ${["m2", "m1", "", "p1", "p2"][level(v) + 2]}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}"><td class="pick"><label><input type="checkbox" value="${v[0]}" aria-label="${v[0]} auswählen" ${store.sel.includes(v[0]) ? "checked" : ""}></label></td>${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
@@ -604,10 +613,12 @@ function list() {
   // Ankreuzen: eine geänderte Auswahl fängt wieder beim ersten Verb an
   const boxes = [...app.querySelectorAll("td.pick input")];
   // Gruppen aus dem Buch: ein Tipp kreuzt alle Verben der Gruppe an (oder wieder ab, wenn schon alle angekreuzt sind)
-  const chips = [...app.querySelectorAll("[data-group]")], group = c => boxes.slice(RANGES[c.dataset.group][1], RANGES[c.dataset.group][2]);
+  // Genauso die Farb-Knöpfe: alle Verben mit diesem Lernstand
+  const chips = [...app.querySelectorAll("[data-group], [data-level]")];
+  const group = c => c.dataset.level ? boxes.filter((b, i) => level(VERBS[i]) === +c.dataset.level) : boxes.slice(RANGES[c.dataset.group][1], RANGES[c.dataset.group][2]);
   const pick = () => {
     resetTour(); store.sel = boxes.filter(b => b.checked).map(b => b.value); save(); tourUI();
-    chips.forEach(c => c.classList.toggle("on", group(c).every(b => b.checked)));
+    chips.forEach(c => c.classList.toggle("on", group(c).length > 0 && group(c).every(b => b.checked)));
   };
   chips.forEach(c => c.onclick = () => { const on = !group(c).every(b => b.checked); group(c).forEach(b => b.checked = on); pick(); });
   app.querySelector("table").onclick = e => { if (e.target.closest(".pick")) e.stopPropagation(); };   // kein Vorlesen beim Ankreuzen
