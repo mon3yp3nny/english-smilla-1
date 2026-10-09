@@ -23,7 +23,7 @@ The top of the `<script>` holds the data (`VERBS`, `RANGES`, `WAS_WERE`, `SENTEN
 - That section must stay pure data and pure functions (no DOM, no `localStorage`), and the `// ---------- Speicher` marker comment must stay where it is.
 - Audio filenames are derived from the text: `audio/v/<slug(infinitive)>-{0,1,2,all,de,ich,ex0,ex1,ex2}.mp3` per verb (`de` is the German meaning and `ich` the German first-person form, both spoken by a German voice; `ex0`–`ex2` are the three English example phrases "I …", "I …", "I have …" built by `example()`; the "Alle vorlesen" run in the list plays one clip per line it shows full-screen) and `audio/s/<slug(plain(sentence, answer))>.mp3` per sentence. Editing a verb or sentence changes its filename, so rerun the generator and delete the orphaned MP3s. MP3s are committed.
 - If an MP3 is missing or fails to load, `play()` falls back to the browser's speech synthesis, so a missing file is silent in testing rather than an error.
-- `RANGES` are hard-coded index slices into `VERBS` (they mirror the textbook pages). Adding, removing or reordering verbs means updating those indices.
+- `RANGES` are hard-coded index slices into `VERBS` (they mirror the textbook pages) and are only quick-select groups in the verb list. Adding, removing or reordering verbs means updating those indices.
 - The pronunciation override for "read" (spoken as "red" in the past forms) lives in `gen-audio.js`, not in the data.
 
 ### Answer format conventions
@@ -40,7 +40,7 @@ Missed questions are appended to the end of the running session with `retry: tru
 
 ### Persistence
 
-Everything lives in one `localStorage` entry (`KEY`): per-verb streaks in `store.p` (a verb counts as mastered at a streak of 2), per-verb miss counters in `store.m` (+1 per wrong answer, -1 per right one; with the streak they give the five colour levels in the verb list, see `level()`), the settings, and the entire in-progress session object `store.session`, which is restored on load so a reload resumes at the same question. Because the session is round-tripped through JSON, question objects must stay plain serializable data: no functions or DOM nodes, and `q.verb` is a copy after reload, not a reference into `VERBS`. Changing the shape of question objects can break a session saved by an older version.
+Everything lives in one `localStorage` entry (`KEY`): per-verb streaks in `store.p` (a verb counts as mastered at a streak of 2), per-verb miss counters in `store.m` (+1 per wrong answer, -1 per right one; with the streak they give the five colour levels in the verb list, see `level()`), the settings (including `store.sel`, the ticked verbs: all verb exercises and the read-all run use only these, or every verb when it is empty), and the entire in-progress session object `store.session`, which is restored on load so a reload resumes at the same question. Because the session is round-tripped through JSON, question objects must stay plain serializable data: no functions or DOM nodes, and `q.verb` is a copy after reload, not a reference into `VERBS`. Changing the shape of question objects can break a session saved by an older version.
 
 ### Version number
 

@@ -246,7 +246,6 @@ const VERBS = [
 ];
 
 const RANGES = [
-  ["Alle", 0, 70],
   ["be – grow", 0, 26],
   ["hang out – sleep", 26, 54],
   ["smell – write", 54, 70]
@@ -370,7 +369,7 @@ const example = v => {
   return [v[0] === "be" ? "am" : f(0), f(1), "have " + f(2)].map(t => "I " + t);
 };
 
-const VERSION = 18;
+const VERSION = 19;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -379,9 +378,11 @@ let store = {};
 try { store = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
 store.p = store.p || {};          // Verb -> richtige Antworten in Folge
 store.m = store.m || {};          // Verb -> Fehlerzähler: +1 bei falsch, -1 bei richtig (nie unter 0)
-store.range = store.range || 0;
 store.pp = !!store.pp;
-store.sel = (store.sel || []).filter(n => VERBS.some(v => v[0] === n));   // in der Liste angekreuzte Verben (Infinitive)
+store.sel = (store.sel || []).filter(n => VERBS.some(v => v[0] === n));   // angekreuzte Verben (Infinitive); leer = alle
+// Früher wählte man eine Gruppe (1–3) statt einzelner Verben – als Auswahl übernehmen
+if (store.range && !store.sel.length) store.sel = VERBS.slice(...RANGES[store.range - 1].slice(1)).map(v => v[0]);
+delete store.range;
 if (store.sound === undefined) store.sound = true;
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 // Bittet den Browser, den Fortschritt auch bei wenig Speicherplatz nicht zu löschen
@@ -398,7 +399,8 @@ const level = v => {
   const s = streak(v), m = store.m[v[0]] || 0;
   return s >= 4 ? 2 : s >= 2 ? 1 : m >= 3 ? -2 : m >= 1 || store.p[v[0]] === 0 ? -1 : 0;
 };
-const pool = () => VERBS.slice(RANGES[store.range][1], RANGES[store.range][2]);
+// Geübt werden die angekreuzten Verben – ohne Auswahl alle
+const pool = () => store.sel.length ? VERBS.filter(v => store.sel.includes(v[0])) : VERBS;
 
 function norm(s) {
   return s.toLowerCase().replace(/[’`´]/g, "'").replace(/[().!?]/g, "").replace(/\s+/g, " ").trim();
@@ -447,7 +449,7 @@ app.addEventListener("click", e => {
 
 // ---------- Startseite ----------
 function home() {
-  const done = VERBS.filter(isDone).length;
+  const done = VERBS.filter(isDone).length, sel = store.sel.length;
   const modes = [
     ["cards", "🃏", "Karteikarten", "Anschauen, aufdecken, merken"],
     ["write", "✍️", "Formen schreiben", "Du tippst die Formen selbst ein"],
@@ -469,7 +471,8 @@ function home() {
       <p class="muted" style="margin:8px 0 0">Ein Verb gilt als sicher, wenn du es zweimal hintereinander richtig hattest.</p>
     </div>
     <div class="section">Welche Verben?</div>
-    <div class="chips">${RANGES.map((r, i) => `<button class="chip ${i === store.range ? "on" : ""}" data-range="${i}">${r[0]} <small>${VERBS.slice(r[1], r[2]).filter(isDone).length}/${r[2] - r[1]}</small></button>`).join("")}</div>
+    <button class="mode" id="choose"><span class="ico">☑️</span><span><b>${sel ? `${sel} ${sel > 1 ? "Verben" : "Verb"} ausgewählt` : `Alle ${VERBS.length} Verben`}</b><span class="muted">${sel ? `${pool().filter(isDone).length} davon sicher · tippen zum Ändern` : "Tippen, um einzelne Verben auszuwählen"}</span></span></button>
+    ${sel ? '<p class="center" style="margin:0"><button class="link" id="allVerbs">Wieder alle Verben üben</button></p>' : ""}
     <div class="section">Unregelmäßige Verben</div>
     ${modes.map(btn).join("")}
     <div class="section">Grammatik</div>
@@ -485,7 +488,8 @@ function home() {
     <p class="center muted">Version ${VERSION} · <button class="link" id="reload">🔄 Neu laden</button></p>`;
   store.session = null; save();
 
-  app.querySelectorAll("[data-range]").forEach(b => b.onclick = () => { store.range = +b.dataset.range; save(); home(); });
+  document.getElementById("choose").onclick = list;
+  if (sel) document.getElementById("allVerbs").onclick = () => { store.sel = []; save(); home(); };
   app.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => b.dataset.mode === "list" ? list() : start(b.dataset.mode));
   document.getElementById("pp").onchange = e => { store.pp = e.target.checked; save(); };
   document.getElementById("sound").onchange = e => { store.sound = e.target.checked; save(); };
@@ -579,7 +583,8 @@ function startTour() {
 function list() {
   app.innerHTML = `
     <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
-    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste. Kreuze Verben an ☑️, dann hörst du nur diese – immer wieder von vorn 🔁.</p>
+    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste. Kreuze Verben an ☑️, dann übst und hörst du nur diese – das Vorlesen läuft dann immer wieder von vorn 🔁.</p>
+    <div class="chips">${RANGES.map((r, i) => `<button class="chip" data-group="${i}">${r[0]}</button>`).join("")}</div>
     <div class="legend"><span class="m2">oft falsch</span><span class="m1">falsch</span><span>neu</span><span class="p1">sicher</span><span class="p2">sehr sicher</span></div>
     <table>
       <tr><th class="pick"><button class="link" id="clearSel" aria-label="Auswahl aufheben" hidden>✕</button></th><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
@@ -598,11 +603,17 @@ function list() {
   app.querySelectorAll("[data-tour]").forEach(b => b.onclick = act[b.dataset.tour]);
   // Ankreuzen: eine geänderte Auswahl fängt wieder beim ersten Verb an
   const boxes = [...app.querySelectorAll("td.pick input")];
-  const pick = () => { resetTour(); store.sel = boxes.filter(b => b.checked).map(b => b.value); save(); tourUI(); };
+  // Gruppen aus dem Buch: ein Tipp kreuzt alle Verben der Gruppe an (oder wieder ab, wenn schon alle angekreuzt sind)
+  const chips = [...app.querySelectorAll("[data-group]")], group = c => boxes.slice(RANGES[c.dataset.group][1], RANGES[c.dataset.group][2]);
+  const pick = () => {
+    resetTour(); store.sel = boxes.filter(b => b.checked).map(b => b.value); save(); tourUI();
+    chips.forEach(c => c.classList.toggle("on", group(c).every(b => b.checked)));
+  };
+  chips.forEach(c => c.onclick = () => { const on = !group(c).every(b => b.checked); group(c).forEach(b => b.checked = on); pick(); });
   app.querySelector("table").onclick = e => { if (e.target.closest(".pick")) e.stopPropagation(); };   // kein Vorlesen beim Ankreuzen
   boxes.forEach(b => b.onchange = pick);
   document.getElementById("clearSel").onclick = () => { boxes.forEach(b => b.checked = false); pick(); };
-  tourUI();
+  pick();
   window.scrollTo(0, 0);
 }
 
