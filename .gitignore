@@ -3,3 +3,10 @@
 *.jpeg
 *.jpg
 .claude/
+
+# Impeccable / Playwright scratch output
+.impeccable/review/
+.impeccable/mocks/
+.playwright-mcp/
+.impeccable/hook.cache.json
+.impeccable/questions/

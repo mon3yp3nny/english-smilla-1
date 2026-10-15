@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#6c4cf1">
+<meta name="theme-color" content="#f8f9fb">
+<link rel="preload" href="fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Englisch">
@@ -11,163 +12,281 @@
 <title>Englisch-Trainer: Irregular Verbs</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦝</text></svg>">
 <style>
+  @font-face {
+    font-family: "Bricolage Grotesque"; font-weight: 400 800; font-display: swap;
+    src: url(fonts/bricolage-grotesque-latin.woff2) format("woff2");
+  }
+  /* Heft & Textmarker: Karopapier, Fineliner-Tinte, Textmarker nur für Zustände
+     (gelb = aktuell/ausgewählt, grün = richtig/sicher, pink = falsch) */
   :root {
-    --bg: #f4f2fb; --card: #ffffff; --text: #1f1b2e; --muted: #6b6780;
-    --line: #e3dff0; --accent: #6c4cf1; --accent-soft: #ece7ff;
-    --ok: #1a9c5b; --ok-soft: #dcf5e7; --ok-mid: #a6e3c2; --bad: #d63a4a; --bad-soft: #fde3e6; --bad-mid: #f6b1ba;
+    color-scheme: light;
+    --paper: #f8f9fb; --grid: #e2e7ef; --sheet: #ffffff; --ink: #1d2433; --muted: #525b6d; --hair: #cdd3de;
+    --hl-y: #f6ea4f; --hl-g: #86eeb4; --hl-p: #ffa3c4; --on-hl: #1d2433;
+    --ok: #0b7443; --bad: #b8124f;
+    /* Lernstand in fünf Stufen: oft falsch, falsch, (neu), sicher, sehr sicher */
+    --lv-m2: #ff94ba; --lv-m1: #ffd6e5; --lv-p1: #cdf8df; --lv-p2: #86eeb4;
+    --lift: 0 12px 28px -14px rgba(29, 36, 51, .45);
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #15131f; --card: #211e30; --text: #f1eefb; --muted: #a29dba;
-      --line: #35304a; --accent: #9c85ff; --accent-soft: #2e2850;
-      --ok: #4fd08f; --ok-soft: #173a2a; --ok-mid: #20603f; --bad: #ff7a88; --bad-soft: #45202a; --bad-mid: #742c3b;
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #121722; --grid: #1c2331; --sheet: #182030; --ink: #e8ecf4; --muted: #a2abbd; --hair: #323c52;
+      --hl-y: #ece052; --hl-g: #74e0a6; --hl-p: #f29abb; --on-hl: #121722;
+      --ok: #74e0a6; --bad: #f29abb;
+      --lv-m2: #f29abb; --lv-m1: rgba(242, 154, 187, .2); --lv-p1: rgba(116, 224, 166, .18); --lv-p2: #74e0a6;
+      --lift: 0 12px 28px -12px rgba(0, 0, 0, .7);
     }
   }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #121722; --grid: #1c2331; --sheet: #182030; --ink: #e8ecf4; --muted: #a2abbd; --hair: #323c52;
+    --hl-y: #ece052; --hl-g: #74e0a6; --hl-p: #f29abb; --on-hl: #121722;
+    --ok: #74e0a6; --bad: #f29abb;
+    --lv-m2: #f29abb; --lv-m1: rgba(242, 154, 187, .2); --lv-p1: rgba(116, 224, 166, .18); --lv-p2: #74e0a6;
+    --lift: 0 12px 28px -12px rgba(0, 0, 0, .7);
+  }
+  :root { --karo: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); }
   * { box-sizing: border-box; }
-  button, input, label { touch-action: manipulation; }
+  button, input, label, summary { touch-action: manipulation; }
   button { -webkit-tap-highlight-color: transparent; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 17px/1.45 ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
-    -webkit-text-size-adjust: 100%;
+    margin: 0; color: var(--ink); background-color: var(--paper);
+    background-image: var(--karo); background-size: 24px 24px; background-position: -1px -1px;
+    font: 400 18px/1.45 "Bricolage Grotesque", system-ui, -apple-system, sans-serif;
+    font-optical-sizing: auto; -webkit-text-size-adjust: 100%; caret-color: var(--ink);
   }
-  #app { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+  ::selection { background: var(--hl-y); color: var(--on-hl); }
+  :focus-visible { outline: 5px solid var(--hl-y); outline-offset: 0; }
+  #app { max-width: 600px; margin: 0 auto; padding: 28px 16px 56px; padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
   @media (min-width: 700px) {
     body { font-size: 20px; }
-    #app { max-width: 680px; padding-top: 36px; }
+    #app { max-width: 700px; padding: 52px 40px 72px; }
   }
-  h1 { font-size: 1.6rem; margin: 4px 0 2px; }
-  h2 { font-size: 1.15rem; margin: 0 0 8px; }
+  h1 { font-size: clamp(3rem, 11vw, 4.6rem); font-weight: 800; line-height: .92; letter-spacing: -.035em; margin: 0; }
+  h2 { font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; margin: 0 0 8px; text-wrap: balance; }
   p { margin: 0 0 12px; }
   .muted { color: var(--muted); font-size: .9rem; }
-  .card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
-    padding: 18px; margin: 14px 0;
+  .center { text-align: center; }
+  .ico { width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Textmarker: der Strich läuft von links nach rechts über das Wort */
+  .mark {
+    color: var(--on-hl); background: linear-gradient(var(--mk, var(--hl-y)), var(--mk, var(--hl-y))) no-repeat 0 var(--my, 72%) / 100% var(--mh, 80%);
+    padding: 0 .14em; margin: 0 -.04em; border-radius: .06em .22em .1em .18em;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
   }
+  .mark.g { --mk: var(--hl-g); }
+  .mark.p { --mk: var(--hl-p); }
+  .swipe { animation: swipe .55s cubic-bezier(.16, 1, .3, 1) both; }
+  @keyframes swipe {
+    from { background-size: 0 var(--mh, 80%); color: var(--ink); }
+    40% { color: var(--on-hl); }
+    to { background-size: 100% var(--mh, 80%); }
+  }
+  @media (prefers-reduced-motion: reduce) { .swipe { animation: none; } }
+
   button { font: inherit; color: inherit; cursor: pointer; }
   .btn {
-    display: block; width: 100%; padding: 14px 16px; border-radius: 14px;
-    border: 0; background: var(--accent); color: #fff; font-weight: 700; font-size: 1.05rem;
+    display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; padding: 14px 20px;
+    border-radius: 12px; border: 2px solid var(--ink); background: var(--ink); color: var(--paper);
+    font-weight: 700; font-size: 1.1rem; transition: transform .12s ease-out, box-shadow .2s ease-out;
   }
-  .btn.ghost { background: var(--accent-soft); color: var(--accent); }
+  .btn.ghost { background: transparent; color: var(--ink); }
+  .btn:active { transform: scale(.98); }
   .btn:disabled { opacity: .5; }
-  .row { display: flex; gap: 10px; }
+  .row { display: flex; gap: 12px; }
   .row > * { flex: 1; }
 
-  .bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; }
-  .bar > i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .3s; }
+  /* Startseite */
+  .title { margin: 0 0 6px; line-height: 1; }
+  .title .mark { --mh: 76%; --my: 75%; padding: 0 .1em; margin: 0 -.1em; }
+  .title + .muted { font-size: 1rem; margin: 10px 0 0; }
+  .prog { display: block; width: 100%; margin: 34px 0 0; padding: 0; border: 0; background: none; text-align: left; }
+  .prog .num { display: flex; align-items: baseline; gap: 14px; }
+  .prog .num b { font-size: clamp(4.2rem, 16vw, 6rem); font-weight: 800; line-height: .9; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+  .prog .num span { color: var(--muted); font-size: 1.05rem; line-height: 1.25; }
+  .strip { display: grid; grid-template-columns: repeat(35, 1fr); gap: 4px; margin-top: 18px; }
+  .strip i { height: 22px; border-radius: 3px; background: var(--sheet); box-shadow: inset 0 0 0 1.5px var(--hair); }
+  .strip i[class] { box-shadow: none; }
+  @media (max-width: 499px) { .strip { grid-template-columns: repeat(14, 1fr); } .strip i { height: 16px; } }
+  .strip i.m2 { background: var(--lv-m2); } .strip i.m1 { background: var(--lv-m1); }
+  .strip i.p1 { background: var(--lv-p1); } .strip i.p2 { background: var(--lv-p2); }
+  .prog small { display: block; color: var(--muted); font-size: .85rem; margin-top: 10px; }
+  .section { margin: 44px 0 10px; font-size: 1.55rem; font-weight: 800; letter-spacing: -.025em; line-height: 1.15; }
+  .list { border-top: 2px solid var(--ink); }
+  .item {
+    display: flex; align-items: center; gap: 16px; width: 100%; min-height: 72px; text-align: left;
+    background: none; border: 0; border-bottom: 1.5px solid var(--ink); padding: 14px 4px;
+  }
+  .item > span { flex: 1; }
+  .item b { display: inline; font-size: 1.22rem; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; padding: 0 .16em; margin: 0 -.16em; border-radius: .14em .4em .2em .36em; transition: background-color .15s ease-out, color .15s ease-out; }
+  .item .muted { display: block; font-size: .92rem; margin-top: 2px; }
+  .item > .ico { width: 1.5em; height: 1.5em; transition: transform .2s cubic-bezier(.16, 1, .3, 1); }
+  .item:active b, .item:focus-visible b { background: var(--hl-y); color: var(--on-hl); }
+  @media (hover: hover) { .item:hover b { background: var(--hl-y); color: var(--on-hl); } .item:hover > .ico { transform: translateX(4px); } }
+  .btn.exam { justify-content: space-between; text-align: left; padding: 18px 22px; min-height: 80px; }
+  .btn.exam b { display: block; font-size: 1.35rem; }
+  .btn.exam span span { display: block; font-weight: 400; font-size: .92rem; opacity: .8; }
+  .btn.exam .ico { width: 1.5em; height: 1.5em; }
 
+  /* Einstellungen */
+  label.check { display: flex; align-items: center; gap: 14px; font-size: 1rem; padding: 14px 4px; border-bottom: 1.5px solid var(--ink); cursor: pointer; }
+  input[type=checkbox] {
+    -webkit-appearance: none; appearance: none; flex: none; width: 26px; height: 26px; margin: 0;
+    border: 2px solid var(--ink); border-radius: 6px; background: var(--sheet); display: grid; place-content: center; cursor: pointer;
+  }
+  input[type=checkbox]::after { content: ""; width: 7px; height: 13px; border: solid var(--on-hl); border-width: 0 3px 3px 0; transform: rotate(45deg) translate(-1px, -1px); opacity: 0; }
+  input[type=checkbox]:checked { background: var(--hl-g); }
+  input[type=checkbox]:checked::after { opacity: 1; }
+  .seg-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 14px 4px; border-bottom: 1.5px solid var(--ink); }
+  .seg { display: flex; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; }
+  .seg button { border: 0; background: var(--sheet); padding: 10px 14px; min-height: 44px; font-size: .95rem; font-weight: 600; }
+  .seg button + button { border-left: 2px solid var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--hl-y); color: var(--on-hl); font-weight: 700; }
+  .foot { margin-top: 28px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .link { border: 0; background: none; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; font-size: .9rem; padding: 10px; min-height: 44px; }
+  .link .ico { margin-right: 4px; }
+
+  /* Übungsrunde */
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .x { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; color: var(--ink); padding: 0; }
+  .x .ico { width: 26px; height: 26px; }
+  .bar { flex: 1; height: 14px; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); background: var(--sheet); overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--hl-y); box-shadow: inset 0 0 0 2px var(--ink); border-radius: 99px; transition: width .4s cubic-bezier(.16, 1, .3, 1); }
+  .count { font-size: .95rem; font-weight: 600; color: var(--muted); min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+  .q { text-align: center; padding: 40px 0 28px; }
+  .q .tag { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px; font-size: .9rem; font-weight: 700; }
+  .q .head { font-size: clamp(2.6rem, 10vw, 3.8rem); font-weight: 800; line-height: 1.1; letter-spacing: -.03em; text-wrap: balance; }
+  .q .head.sentence { font-size: clamp(1.5rem, 5vw, 1.9rem); font-weight: 600; line-height: 1.35; letter-spacing: -.01em; }
+  .q .sub { color: var(--muted); margin-top: 12px; font-size: 1.05rem; text-wrap: balance; }
+  .q .sub b { color: var(--ink); }
+  .say {
+    display: inline-grid; place-items: center; width: 44px; height: 44px; margin-left: 10px; vertical-align: middle; padding: 0;
+    border: 2px solid var(--ink); border-radius: 50%; background: var(--sheet); color: var(--ink);
+    font-size: 1rem; font-weight: 700; letter-spacing: 0; transition: transform .12s ease-out;
+  }
+  .say .ico { width: 20px; height: 20px; }
+  .say:active { transform: scale(.92); background: var(--hl-y); color: var(--on-hl); }
+  .say.big { display: inline-flex; gap: 10px; width: auto; height: auto; margin: 0; padding: 16px 30px; border-radius: 99px; background: var(--ink); color: var(--paper); font-size: 1.3rem; }
+  .say.big .ico { width: 26px; height: 26px; }
+  .blank { display: inline-block; min-width: 2.6em; border-bottom: 3px solid var(--ink); padding: 0 4px; line-height: 1.1; }
+  .hint { display: inline-block; background: linear-gradient(var(--hl-y), var(--hl-y)) no-repeat 0 72% / 100% 80%; color: var(--on-hl); border-radius: .06em .22em .1em .18em; padding: 0 .3em; font-weight: 700; }
+
+  .field { margin: 14px 0; }
+  .field label { display: block; font-size: .85rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%; padding: 14px 16px; font: inherit; font-size: 1.3rem; font-weight: 600; color: var(--ink);
+    background: var(--sheet); border: 2px solid var(--ink); border-radius: 12px; outline: none;
+    transition: box-shadow .15s ease-out;
+  }
+  input[type=text]:focus { box-shadow: 0 0 0 5px var(--hl-y); }
+  input.ok { border-color: var(--ok); background: var(--lv-p1); box-shadow: none !important; }
+  input.bad { border-color: var(--bad); background: var(--lv-m1); box-shadow: none !important; }
+  .fix { color: var(--bad); font-size: .95rem; font-weight: 600; margin-top: 6px; }
+  .fix b { color: var(--ink); }
+  #go { margin-top: 20px; }
+
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 12px; }
+  .opt {
+    min-height: 72px; padding: 16px 12px; border-radius: 12px; border: 2px solid var(--ink); background: var(--sheet);
+    font-weight: 700; font-size: 1.2rem; transition: transform .12s ease-out, opacity .2s;
+  }
+  .opt:active { transform: scale(.97); }
+  @media (hover: hover) { .opt:not(:disabled):hover { background: var(--hl-y); color: var(--on-hl); } }
+  .opt:disabled { cursor: default; opacity: .45; color: var(--ink); }
+  .opt.ok, .opt.bad { opacity: 1; color: var(--on-hl); }
+  .opt.ok { background: var(--hl-g); }
+  .opt.bad { background: var(--hl-p); }
+
+  .fb { border-top: 2px solid var(--ink); padding: 18px 4px 4px; margin: 20px 0 18px; font-size: 1.35rem; font-weight: 800; letter-spacing: -.01em; }
+  .fb small { display: block; font-weight: 500; font-size: 1.05rem; letter-spacing: 0; margin-top: 10px; line-height: 1.5; }
+  .fb small .say { width: 38px; height: 38px; margin-left: 6px; }
+  .fb .blank, ul.miss .blank { border: 0; min-width: 0; padding: 0 .12em; background: linear-gradient(var(--hl-g), var(--hl-g)) no-repeat 0 72% / 100% 80%; color: var(--on-hl); border-radius: .06em .22em .1em .18em; }
+  .fb .tip { display: block; color: var(--muted); margin-top: 8px; }
+  .fb .tip b { color: var(--ink); }
+
+  .forms { display: grid; margin-top: 28px; text-align: left; border-top: 2px solid var(--ink); }
+  .forms > div { padding: 12px 4px; border-bottom: 1.5px solid var(--ink); }
+  .forms span { display: block; font-size: .85rem; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+  .forms b { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; }
+  .forms .say { width: 38px; height: 38px; }
+  .forms + .muted { margin-top: 14px !important; }
+  .rules { margin: 28px 0 0; font-size: .98rem; border-top: 2px solid var(--ink); border-bottom: 1.5px solid var(--ink); }
+  .rules summary { display: flex; align-items: center; justify-content: space-between; min-height: 56px; font-weight: 700; font-size: 1.1rem; cursor: pointer; list-style: none; padding: 0 4px; }
+  .rules summary::-webkit-details-marker { display: none; }
+  .rules summary .ico { width: 1.3em; height: 1.3em; transition: transform .25s cubic-bezier(.16, 1, .3, 1); }
+  .rules[open] summary .ico { transform: rotate(45deg); }
+  .rules > *:not(summary) { margin-left: 4px; margin-right: 4px; }
+  .rules .forms { margin-top: 10px; border-top-width: 1.5px; }
+  .rules .forms b { font-size: 1.3rem; }
+  .rules i { color: var(--muted); }
+  .rules ul { padding-left: 20px; margin: 16px 4px 18px; }
+  .rules li { margin: 10px 0; }
+
+  .score { text-align: center; margin: 48px 0 12px; }
+  .score b { font-size: clamp(5rem, 22vw, 8rem); font-weight: 800; line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+  .score + p { font-size: 1.3rem; font-weight: 700; margin-bottom: 28px; }
+  .miss-box { border-top: 2px solid var(--ink); padding-top: 16px; margin-bottom: 28px; }
+  ul.miss { padding-left: 0; list-style: none; margin: 8px 0 0; }
+  ul.miss li { padding: 10px 4px; border-bottom: 1.5px solid var(--hair); font-weight: 600; }
+  ul.miss .blank { font-weight: 800; }
+
+  /* Liste */
+  .top h2 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -.025em; }
+  .intro { color: var(--muted); font-size: .95rem; max-width: 62ch; margin: 8px 0 18px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
   .chip {
-    padding: 8px 12px; border-radius: 99px; border: 1px solid var(--line);
-    background: var(--card); font-size: .9rem;
+    min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 2px solid var(--ink);
+    background: var(--sheet); font-size: .92rem; font-weight: 600;
   }
-  .chip small { opacity: .7; font-weight: 500; margin-left: 2px; }
-  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
-
-  .mode {
-    display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
-    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
-    padding: 14px 16px; margin: 10px 0;
-  }
-  .mode .ico { font-size: 1.8rem; width: 40px; text-align: center; }
-  .mode b { display: block; }
-  .mode span.muted { display: block; }
-  .section { margin: 22px 0 4px; font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-  label.check { display: flex; align-items: center; gap: 8px; font-size: .95rem; margin-top: 8px; }
-  label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
-
-  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
-  .top .bar { flex: 1; }
-  .x { border: 0; background: none; font-size: 1.4rem; padding: 4px 8px; color: var(--muted); }
-  .count { font-size: .9rem; color: var(--muted); min-width: 48px; text-align: right; }
-
-  .q { text-align: center; padding: 26px 18px; }
-  .q .head { font-size: 1.7rem; font-weight: 800; line-height: 1.25; }
-  .q .head.sentence { font-size: 1.3rem; font-weight: 600; }
-  .q .sub { color: var(--muted); margin-top: 6px; }
-  .say { border: 0; background: var(--accent-soft); border-radius: 99px; padding: 4px 10px; margin-left: 6px; font-size: 1rem; vertical-align: middle; }
-  .say.big { font-size: 1.3rem; font-weight: 700; padding: 14px 28px; margin: 0; color: var(--accent); }
-  .blank { display: inline-block; min-width: 64px; border-bottom: 3px solid var(--accent); color: var(--accent); font-weight: 800; padding: 0 4px; }
-  .hint { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 8px; padding: 2px 10px; font-weight: 700; }
-
-  .field { margin: 12px 0; }
-  .field label { display: block; font-size: .85rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
-  input[type=text] {
-    width: 100%; padding: 14px; font: inherit; font-size: 1.15rem; color: var(--text);
-    background: var(--card); border: 2px solid var(--line); border-radius: 14px; outline: none;
-  }
-  input[type=text]:focus { border-color: var(--accent); }
-  input.ok { border-color: var(--ok); background: var(--ok-soft); }
-  input.bad { border-color: var(--bad); background: var(--bad-soft); }
-  .fix { color: var(--bad); font-size: .95rem; margin-top: 4px; }
-
-  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
-  .opt { padding: 16px 10px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); font-weight: 700; font-size: 1.05rem; }
-  .opt.ok { border-color: var(--ok); background: var(--ok-soft); }
-  .opt.bad { border-color: var(--bad); background: var(--bad-soft); }
-
-  .fb { border-radius: 14px; padding: 12px 14px; margin: 12px 0; font-weight: 600; }
-  .fb.ok { background: var(--ok-soft); color: var(--ok); }
-  .fb.bad { background: var(--bad-soft); color: var(--bad); }
-  .fb small { display: block; font-weight: 500; color: var(--text); margin-top: 4px; font-size: .95rem; }
-
-  .forms { display: grid; gap: 8px; margin-top: 16px; text-align: left; }
-  .forms div { background: var(--accent-soft); border-radius: 12px; padding: 10px 14px; }
-  .forms span { display: block; font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-  .forms b { font-size: 1.2rem; }
-  .rules { margin-top: 16px; font-size: .95rem; }
-  .rules summary { font-weight: 700; color: var(--accent); cursor: pointer; }
-  .rules .forms { margin-top: 10px; }
-  .rules i { color: var(--muted); }
-  .rules ul { padding-left: 20px; margin: 14px 0 0; }
-  .rules li { margin: 8px 0; }
-
-  .score { font-size: 3rem; font-weight: 800; text-align: center; margin: 6px 0 0; }
-  .center { text-align: center; }
-  ul.miss { padding-left: 20px; margin: 6px 0 0; }
-  ul.miss li { margin: 4px 0; }
-
-  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-  th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 6px 4px; position: sticky; top: 0; background: var(--bg); }
-  td { padding: 8px 4px; border-top: 1px solid var(--line); vertical-align: top; }
-  td:nth-child(2) { font-weight: 700; }
-  th.pick, td.pick { width: 36px; padding: 0; }
-  td.pick label { display: block; padding: 8px 8px 8px 2px; cursor: pointer; }
-  td.pick input { display: block; width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
-  th.pick .link { padding: 4px 8px 4px 4px; font-size: 1rem; text-decoration: none; }
-  td.de { color: var(--muted); }
-  tr[data-say] { cursor: pointer; }
-  td[data-say]:active { background: var(--accent-soft); }
-  /* Lernstand in fünf Stufen: oft falsch, falsch, (neu), sicher, sehr sicher */
-  .m2, tr.m2 td { background: var(--bad-mid); }
-  .m1, tr.m1 td { background: var(--bad-soft); }
-  .p1, tr.p1 td { background: var(--ok-soft); }
-  .p2, tr.p2 td { background: var(--ok-mid); }
+  .chip small { font-weight: 500; margin-left: 4px; font-variant-numeric: tabular-nums; opacity: .75; }
+  .chip.on { background: var(--hl-y); color: var(--on-hl); font-weight: 700; }
   /* Farb-Knöpfe über der Liste: behalten ihre Farbe, angekreuzt bekommen sie einen Rand */
-  .legend { margin: 0 0 12px; }
-  .legend .chip.on { background: var(--card); color: var(--text); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
-  .legend .chip.m2 { background: var(--bad-mid); }
-  .legend .chip.m1 { background: var(--bad-soft); }
-  .legend .chip.p1 { background: var(--ok-soft); }
-  .legend .chip.p2 { background: var(--ok-mid); }
-  .legend .chip:disabled { opacity: .45; }
-  tr.now td { background: var(--accent-soft); }
-  .tour { position: sticky; bottom: calc(14px + env(safe-area-inset-bottom)); text-align: center; margin-top: 16px; pointer-events: none; }
-  .tour .btn, .st-ctl .btn { display: inline-block; margin: 0 3px; width: auto; padding: 16px 30px; font-size: 1.2rem; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
+  .legend { margin: 0 0 18px; }
+  .legend .chip { border-color: transparent; box-shadow: inset 0 0 0 1.5px var(--hair); }
+  .legend .chip.on { background: var(--sheet); color: var(--ink); border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+  /* Kräftige Stufen auf Zeile und Zellen (nur eins von beiden lässt bei krummen Spaltenbreiten
+     einen Haarspalt), die durchscheinenden nur auf der Zeile (sonst doppelt deckend) */
+  .legend .chip.m2, tr.m2, tr.m2 td { background: var(--lv-m2); }
+  .legend .chip.m1, tr.m1 { background: var(--lv-m1); }
+  .legend .chip.p1, tr.p1 { background: var(--lv-p1); }
+  .legend .chip.p2, tr.p2, tr.p2 td { background: var(--lv-p2); }
+  /* kräftige Stufen sind echter Textmarker: dunkle Schrift darauf */
+  .legend .chip.m2, .legend .chip.p2, tr.m2 td, tr.p2 td { color: var(--on-hl); }
+  .legend .chip:disabled { opacity: .4; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th { text-align: left; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 10px 6px 8px; position: sticky; top: 0; z-index: 1; background: var(--paper); box-shadow: inset 0 -2px 0 var(--ink); }
+  td { padding: 10px 6px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  td:nth-child(2) { font-weight: 700; }
+  th.pick, td.pick { width: 44px; padding: 0; }
+  td.pick label { display: block; padding: 8px 8px 8px 4px; cursor: pointer; }
+  td.pick input { display: grid; width: 24px; height: 24px; }
+  th.pick .link { padding: 4px 8px 4px 6px; min-height: 0; text-decoration: none; }
+  td.de { color: var(--muted); }
+  tr.m2 td.de, tr.p2 td.de { color: var(--on-hl); }
+  tr[data-say] { cursor: pointer; }
+  td[data-say]:active { background: var(--hl-y); color: var(--on-hl); }
+  tr.now td { background: var(--hl-y); color: var(--on-hl); }
+  td .ico.done { width: 1em; height: 1em; margin-left: 4px; stroke-width: 3; color: var(--ok); }
+  tr.m2 td .ico.done, tr.p2 td .ico.done { color: var(--on-hl); }
+  .tour { position: sticky; bottom: calc(16px + env(safe-area-inset-bottom)); display: flex; justify-content: center; gap: 8px; margin-top: 18px; pointer-events: none; }
+  .tour .btn, .st-ctl .btn { display: inline-flex; width: auto; padding: 16px 28px; font-size: 1.15rem; border-radius: 99px; box-shadow: var(--lift); pointer-events: auto; }
+  .tour .btn.ghost, .st-ctl .btn.ghost { background: var(--sheet); }
   .tour .btn[hidden], .st-ctl .btn[hidden], .stage[hidden] { display: none; }
-  /* Vollbild beim Vorlesen: das gerade gesprochene Wort steht groß in der Mitte */
-  .stage { position: fixed; inset: 0; z-index: 10; background: var(--bg); display: flex; flex-direction: column; align-items: center; text-align: center;
-    padding: calc(18px + env(safe-area-inset-top)) 20px calc(22px + env(safe-area-inset-bottom)); }
-  .stage .x { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 12px; font-size: 1.8rem; }
-  .st-count { color: var(--muted); font-weight: 700; }
+  /* Vollbild beim Vorlesen: das gerade gesprochene Wort steht groß in der Mitte und bekommt den Textmarker */
+  .stage {
+    position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center;
+    background-color: var(--paper); background-image: var(--karo); background-size: 24px 24px; background-position: -1px -1px;
+    padding: calc(18px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+  }
+  .stage .x { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 10px; }
+  .st-count { display: flex; align-items: center; gap: 6px; min-height: 44px; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
   .st-body { flex: 1; display: flex; flex-direction: column; justify-content: center; width: 100%; }
-  .st-top { font-size: min(5vh, 6.5vw); font-weight: 700; color: var(--muted); margin-bottom: 3vh; }
-  .st-line { font-weight: 800; line-height: 1.2; white-space: nowrap; }
-  .st-top.on, .st-line.on { color: var(--accent); }
+  .st-top { font-size: min(5vh, 6.5vw); font-weight: 600; color: var(--muted); margin-bottom: 3vh; }
+  .st-line { font-weight: 800; line-height: 1.25; letter-spacing: -.03em; white-space: nowrap; }
+  .st-top.on, .st-line.on { color: var(--ink); }
   .st-line.off { visibility: hidden; }
-  tr.done td:nth-child(2)::after { content: " ✓"; color: var(--ok); }
-  .link { border: 0; background: none; color: var(--muted); text-decoration: underline; font-size: .85rem; padding: 8px; }
+  .st-ctl { display: flex; gap: 8px; }
 </style>
 </head>
 <body>
@@ -375,7 +494,7 @@ const example = v => {
   return [v[0] === "be" ? "am" : f(0), f(1), "have " + f(2)].map(t => "I " + t);
 };
 
-const VERSION = 20;
+const VERSION = 21;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -390,12 +509,36 @@ store.sel = (store.sel || []).filter(n => VERBS.some(v => v[0] === n));   // ang
 if (store.range && !store.sel.length) store.sel = VERBS.slice(...RANGES[store.range - 1].slice(1)).map(v => v[0]);
 delete store.range;
 if (store.sound === undefined) store.sound = true;
+if (!["light", "dark"].includes(store.theme)) store.theme = "auto";   // Aussehen: hell, dunkel oder wie das Gerät
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 // Bittet den Browser, den Fortschritt auch bei wenig Speicherplatz nicht zu löschen
 try { navigator.storage.persist().catch(() => {}); } catch (e) {}
 
 // ---------- Helfer ----------
 const app = document.getElementById("app");
+// Strich-Icons, alle mit derselben Linienstärke (siehe .ico im CSS)
+const ICONS = {
+  speaker: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.3 6.5a8 8 0 0 1 0 11"/>',
+  arrow: '<path d="M4.5 12h15M13.5 6l6 6-6 6"/>',
+  back: '<path d="M19.5 12h-15M10.5 6l-6 6 6 6"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  play: '<path d="M7.5 5.5v13l11-6.5z"/>',
+  pause: '<path d="M8.5 5.5v13M15.5 5.5v13"/>',
+  restart: '<path d="M6 5.5v13M18.5 5.5v13L9 12z"/>',
+  loop: '<path d="M4.5 11V9.5a3 3 0 0 1 3-3h12M16.5 3.5l3 3-3 3M19.5 13v1.5a3 3 0 0 1-3 3h-12M7.5 20.5l-3-3 3-3"/>',
+  reload: '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>'
+};
+const icon = name => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+function applyTheme() {
+  if (store.theme === "auto") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = store.theme;
+  const dark = store.theme === "dark" || (store.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.querySelector('meta[name="theme-color"]').content = dark ? "#121722" : "#f8f9fb";
+}
+applyTheme();
+try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme); } catch (e) {}
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const disp = form => form.split("/").join(", ");
 const streak = v => store.p[v[0]] || 0;
@@ -442,7 +585,7 @@ function speak(text, done, lang) {
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 const vAudio = (v, i) => `v/${slug(v[0])}-${i}`;
-const sayBtn = (file, text) => `<button type="button" class="say" data-audio="${file}" data-say="${text}" aria-label="Anhören">🔊</button>`;
+const sayBtn = (file, text) => `<button type="button" class="say" data-audio="${file}" data-say="${text}" aria-label="Anhören">${icon("speaker")}</button>`;
 const fill = (sentence, word) => {
   if (sentence.startsWith("___")) word = word[0].toUpperCase() + word.slice(1);
   return sentence.replace(/ \(not\)/, "").replace("___", `<span class="blank">${word || "&nbsp;"}</span>`);
@@ -457,41 +600,47 @@ app.addEventListener("click", e => {
 function home() {
   const done = VERBS.filter(isDone).length, sel = store.sel.length;
   const modes = [
-    ["cards", "🃏", "Karteikarten", "Anschauen, aufdecken, merken"],
-    ["write", "✍️", "Formen schreiben", "Du tippst die Formen selbst ein"],
-    ["vocab", "🇩🇪", "Deutsch → Englisch", "Du siehst das deutsche Wort und schreibst das Verb"],
-    ["quiz", "🎯", "Quiz", "Vier Antworten – welche stimmt?"],
-    ["listen", "🎧", "Hören & schreiben", "Du hörst die Simple-Past-Form und schreibst sie"]
+    ["cards", "Karteikarten", "Anschauen, aufdecken, merken"],
+    ["write", "Formen schreiben", "Du tippst die Formen selbst ein"],
+    ["vocab", "Deutsch → Englisch", "Du siehst das deutsche Wort und schreibst das Verb"],
+    ["quiz", "Quiz", "Vier Antworten – welche stimmt?"],
+    ["listen", "Hören & schreiben", "Du hörst die Simple-Past-Form und schreibst sie"]
   ];
   const grammar = [
-    ["waswere", "🔀", "was oder were?", "to be im Simple Past"],
-    ["sentences", "📝", "Sätze im Simple Past", "Lücken füllen, auch Verneinung und Fragen"]
+    ["waswere", "was oder were?", "to be im Simple Past"],
+    ["sentences", "Sätze im Simple Past", "Lücken füllen, auch Verneinung und Fragen"]
   ];
-  const btn = m => `<button class="mode" data-mode="${m[0]}"><span class="ico">${m[1]}</span><span><b>${m[2]}</b><span class="muted">${m[3]}</span></span></button>`;
+  const item = (m, attr = `data-mode="${m[0]}"`) => `<button class="item" ${attr}><span><b>${m[1]}</b><span class="muted">${m[2]}</span></span>${icon("arrow")}</button>`;
+  const themes = [["light", "Hell"], ["dark", "Dunkel"], ["auto", "Wie das Gerät"]];
   app.innerHTML = `
-    <h1>🦝 Englisch-Trainer</h1>
+    <h1 class="title">Englisch-<br><span class="mark">Trainer</span></h1>
     <p class="muted">Irregular verbs &amp; Simple Past</p>
-    <div class="card">
-      <h2>${done} von ${VERBS.length} Verben sicher</h2>
-      <div class="bar"><i style="width:${done / VERBS.length * 100}%"></i></div>
-      <p class="muted" style="margin:8px 0 0">Ein Verb gilt als sicher, wenn du es zweimal hintereinander richtig hattest.</p>
+    <button class="prog" data-mode="list" aria-label="${done} von ${VERBS.length} Verben sicher – zur Verbliste">
+      <span class="num"><b>${done}</b><span>von ${VERBS.length} Verben<br>sicher</span></span>
+      <span class="strip" aria-hidden="true">${VERBS.map(v => ["m2", "m1", "", "p1", "p2"][level(v) + 2]).map(c => c ? `<i class="${c}"></i>` : "<i></i>").join("")}</span>
+      <small>Ein Verb gilt als sicher, wenn du es zweimal hintereinander richtig hattest.</small>
+    </button>
+    <h2 class="section">Welche Verben?</h2>
+    <div class="list">${item(["", sel ? `${sel} ${sel > 1 ? "Verben" : "Verb"} ausgewählt` : `Alle ${VERBS.length} Verben`, sel ? `${pool().filter(isDone).length} davon sicher · tippen zum Ändern` : "Tippen, um einzelne Verben auszuwählen"], 'id="choose"')}</div>
+    ${sel ? '<p style="margin:0"><button class="link" id="allVerbs">Wieder alle Verben üben</button></p>' : ""}
+    <h2 class="section">Unregelmäßige Verben</h2>
+    <div class="list">${modes.map(m => item(m)).join("")}</div>
+    <h2 class="section">Grammatik</h2>
+    <div class="list">${grammar.map(m => item(m)).join("")}</div>
+    <h2 class="section">Alles gemischt</h2>
+    <button class="btn exam" data-mode="exam"><span><b>Probe-Arbeit</b><span>to be, Verbformen und Sätze in einer Runde</span></span>${icon("arrow")}</button>
+    <h2 class="section">Nachschlagen</h2>
+    <div class="list">${item(["list", "Alle Verben", "Die ganze Liste zum Nachlesen und Anhören"])}</div>
+    <h2 class="section">Einstellungen</h2>
+    <div class="list">
+      <label class="check"><input type="checkbox" id="pp" ${store.pp ? "checked" : ""}> Beim Schreiben auch die 3. Form (past participle) abfragen</label>
+      <label class="check"><input type="checkbox" id="sound" ${store.sound ? "checked" : ""}> Lösung nach jeder Antwort vorlesen</label>
+      <div class="seg-row"><span id="themeLabel">Aussehen</span><div class="seg" role="group" aria-labelledby="themeLabel">${themes.map(([t, name]) => `<button data-theme-pick="${t}" aria-pressed="${store.theme === t}">${name}</button>`).join("")}</div></div>
     </div>
-    <div class="section">Welche Verben?</div>
-    <button class="mode" id="choose"><span class="ico">☑️</span><span><b>${sel ? `${sel} ${sel > 1 ? "Verben" : "Verb"} ausgewählt` : `Alle ${VERBS.length} Verben`}</b><span class="muted">${sel ? `${pool().filter(isDone).length} davon sicher · tippen zum Ändern` : "Tippen, um einzelne Verben auszuwählen"}</span></span></button>
-    ${sel ? '<p class="center" style="margin:0"><button class="link" id="allVerbs">Wieder alle Verben üben</button></p>' : ""}
-    <div class="section">Unregelmäßige Verben</div>
-    ${modes.map(btn).join("")}
-    <div class="section">Grammatik</div>
-    ${grammar.map(btn).join("")}
-    <div class="section">Alles gemischt</div>
-    ${btn(["exam", "🏁", "Probe-Arbeit", "to be, Verbformen und Sätze in einer Runde"])}
-    <div class="section">Nachschlagen</div>
-    <button class="mode" data-mode="list"><span class="ico">📖</span><span><b>Alle Verben</b><span class="muted">Die ganze Liste zum Nachlesen</span></span></button>
-    <div class="section">Einstellungen</div>
-    <label class="check"><input type="checkbox" id="pp" ${store.pp ? "checked" : ""}> Beim Schreiben auch die 3. Form (past participle) abfragen</label>
-    <label class="check"><input type="checkbox" id="sound" ${store.sound ? "checked" : ""}> Lösung nach jeder Antwort vorlesen 🔊</label>
-    <p class="center" style="margin-top:20px"><button class="link" id="reset">Fortschritt zurücksetzen</button></p>
-    <p class="center muted">Version ${VERSION} · <button class="link" id="reload">🔄 Neu laden</button></p>`;
+    <div class="foot">
+      <button class="link" id="reset">Fortschritt zurücksetzen</button>
+      <span class="muted">Version ${VERSION} · <button class="link" id="reload">${icon("reload")}Neu laden</button></span>
+    </div>`;
   store.session = null; save();
 
   document.getElementById("choose").onclick = list;
@@ -499,6 +648,10 @@ function home() {
   app.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => b.dataset.mode === "list" ? list() : start(b.dataset.mode));
   document.getElementById("pp").onchange = e => { store.pp = e.target.checked; save(); };
   document.getElementById("sound").onchange = e => { store.sound = e.target.checked; save(); };
+  app.querySelectorAll("[data-theme-pick]").forEach(b => b.onclick = () => {
+    store.theme = b.dataset.themePick; save(); applyTheme();
+    app.querySelectorAll("[data-theme-pick]").forEach(o => o.setAttribute("aria-pressed", o === b));
+  });
   document.getElementById("reload").onclick = () => location.reload();
   document.getElementById("reset").onclick = () => { if (confirm("Wirklich den ganzen Fortschritt löschen?")) { store.p = {}; store.m = {}; save(); home(); } };
   window.scrollTo(0, 0);
@@ -525,7 +678,7 @@ function keepAwake(on) {
 }
 function tourUI() {
   const n = store.sel.length;
-  app.querySelectorAll("[data-tour=toggle]").forEach(b => b.textContent = tour ? "⏸ Pause" : tourAt ? "▶️ Weiter" : n ? `🔁 ${n} ${n > 1 ? "Verben" : "Verb"} anhören` : "▶️ Alle vorlesen");
+  app.querySelectorAll("[data-tour=toggle]").forEach(b => b.innerHTML = tour ? icon("pause") + "Pause" : tourAt ? icon("play") + "Weiter" : n ? `${icon("loop")}${n} ${n > 1 ? "Verben" : "Verb"} anhören` : icon("play") + "Alle vorlesen");
   const clear = document.getElementById("clearSel");
   if (clear) clear.hidden = !n;
   app.querySelectorAll("[data-tour=reset]").forEach(b => b.hidden = !!tour || !tourAt);
@@ -535,11 +688,12 @@ function tourUI() {
 // k = Zeile, die gerade gesprochen wird (-1 = die deutsche Überschrift); spätere Zeilen sind noch unsichtbar
 function showStage(i, p, k) {
   const [top, , lines] = pages(VERBS[i])[p], len = Math.max(...lines.map(l => l[0].length));
-  document.getElementById("stCount").textContent = `${store.sel.length ? "🔁 " : ""}${tourAt + 1} / ${tourQ.length}`;
+  document.getElementById("stCount").innerHTML = `${store.sel.length ? icon("loop") : ""}${tourAt + 1} / ${tourQ.length}`;
   const body = document.getElementById("stBody");
   body.style.fontSize = `min(14vh, ${Math.min(24, 170 / len).toFixed(1)}vw)`;
-  body.innerHTML = `<div class="st-top ${k < 0 ? "on" : ""}">${top}</div>` +
-    lines.map((l, j) => `<div class="st-line ${j === k ? "on" : j > k ? "off" : ""}">${l[0]}</div>`).join("");
+  const mark = (t, on) => on ? `<span class="mark swipe">${t}</span>` : t;
+  body.innerHTML = `<div class="st-top ${k < 0 ? "on" : ""}">${mark(top, k < 0)}</div>` +
+    lines.map((l, j) => `<div class="st-line ${j === k ? "on" : j > k ? "off" : ""}">${mark(l[0], j === k)}</div>`).join("");
 }
 // Pause merkt sich das Verb; "Weiter" fängt bei diesem Verb wieder an
 function pauseTour() {
@@ -588,23 +742,23 @@ function startTour() {
 
 function list() {
   app.innerHTML = `
-    <div class="top"><button class="x" id="back" aria-label="Zurück">←</button><h2 style="margin:0">Alle Verben</h2></div>
-    <p class="muted">Tippe auf ein Wort, um es zu hören 🔊 – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste. Kreuze Verben an ☑️ – einzeln oder mit den Knöpfen für Gruppen und Farben –, dann übst und hörst du nur diese – das Vorlesen läuft dann immer wieder von vorn 🔁.</p>
+    <div class="top"><button class="x" id="back" aria-label="Zurück">${icon("back")}</button><h2>Alle Verben</h2></div>
+    <p class="intro">Tippe auf ein Wort, um es zu hören – oder auf die Übersetzung für alle drei Formen. Mit dem großen Knopf unten hörst und siehst du alle Verben nacheinander – ganz groß und mit Pause-Taste. Kreuze Verben an – einzeln oder mit den Knöpfen für Gruppen und Farben –, dann übst und hörst du nur diese – das Vorlesen läuft dann immer wieder von vorn.</p>
     <div class="chips">${RANGES.map((r, i) => `<button class="chip" data-group="${i}">${r[0]}</button>`).join("")}</div>
     <div class="chips legend">${[["m2", "oft falsch"], ["m1", "falsch"], ["", "neu"], ["p1", "sicher"], ["p2", "sehr sicher"]].map(([c, name], i) => {
       const n = VERBS.filter(v => level(v) === i - 2).length;
       return `<button class="chip ${c}" data-level="${i - 2}" ${n ? "" : "disabled"}>${name} <small>${n}</small></button>`;
     }).join("")}</div>
     <table>
-      <tr><th class="pick"><button class="link" id="clearSel" aria-label="Auswahl aufheben" hidden>✕</button></th><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
-      ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""} ${["m2", "m1", "", "p1", "p2"][level(v) + 2]}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}"><td class="pick"><label><input type="checkbox" value="${v[0]}" aria-label="${v[0]} auswählen" ${store.sel.includes(v[0]) ? "checked" : ""}></label></td>${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
+      <tr><th class="pick"><button class="link" id="clearSel" aria-label="Auswahl aufheben" hidden>${icon("close")}</button></th><th>infinitive</th><th>simple past</th><th>past participle</th><th>German</th></tr>
+      ${VERBS.map(v => `<tr class="${isDone(v) ? "done" : ""} ${["m2", "m1", "", "p1", "p2"][level(v) + 2]}" data-audio="${vAudio(v, "all")}" data-say="${verbAudio(v).sayText}"><td class="pick"><label><input type="checkbox" value="${v[0]}" aria-label="${v[0]} auswählen" ${store.sel.includes(v[0]) ? "checked" : ""}></label></td>${[0, 1, 2].map(i => `<td data-audio="${vAudio(v, i)}" data-say="${v[i]}">${disp(v[i])}${i === 0 && isDone(v) ? icon("check").replace('class="ico"', 'class="ico done"') : ""}</td>`).join("")}<td class="de">${v[3]}</td></tr>`).join("")}
     </table>
-    <div class="tour"><button class="btn ghost" data-tour="reset" hidden>⏮ Von vorn</button><button class="btn" data-tour="toggle">▶️ Alle vorlesen</button></div>
+    <div class="tour"><button class="btn ghost" data-tour="reset" hidden>${icon("restart")}Von vorn</button><button class="btn" data-tour="toggle"></button></div>
     <div class="stage" id="stage" hidden>
-      <button class="x" data-tour="close" aria-label="Schließen">✕</button>
+      <button class="x" data-tour="close" aria-label="Schließen">${icon("close")}</button>
       <div class="st-count" id="stCount"></div>
       <div class="st-body" id="stBody"></div>
-      <div class="st-ctl"><button class="btn ghost" data-tour="reset" hidden>⏮ Von vorn</button><button class="btn" data-tour="toggle"></button></div>
+      <div class="st-ctl"><button class="btn ghost" data-tour="reset" hidden>${icon("restart")}Von vorn</button><button class="btn" data-tour="toggle"></button></div>
     </div>`;
   tourAt = 0; stageOpen = false;
   document.getElementById("back").onclick = () => { resetTour(); home(); };
@@ -707,7 +861,7 @@ function build(mode) {
   }));
   if (mode === "listen") return pickVerbs().map(v => ({
     type: "input", tip: verbTip(v), listen: true, verb: v, ...verbAudio(v), sub: v[3], solution: solution(v),
-    head: `<button type="button" class="say big" data-audio="${vAudio(v, 1)}" data-say="${v[1]}">🔊 Anhören</button>`,
+    head: `<button type="button" class="say big" data-audio="${vAudio(v, 1)}" data-say="${v[1]}">${icon("speaker")}Anhören</button>`,
     fields: [{ kind: "past", label: "Welche Simple-Past-Form hörst du?", answer: v[1], needAll: v[0] === "be" }]
   }));
   if (mode === "waswere") return shuffle(WAS_WERE).slice(0, SESSION_LEN).map(s => ({
@@ -765,19 +919,19 @@ function showQ() {
   }
   app.innerHTML = `
     <div class="top">
-      <button class="x" id="quit" aria-label="Beenden">✕</button>
+      <button class="x" id="quit" aria-label="Beenden">${icon("close")}</button>
       <div class="bar"><i style="width:${S.i / S.qs.length * 100}%"></i></div>
       <span class="count">${S.i + 1} / ${S.qs.length}</span>
     </div>
-    <div class="card q">
-      ${q.retry ? '<div class="hint" style="margin-bottom:12px">🔁 Nochmal</div>' : ""}
+    <div class="q">
+      ${q.retry ? `<div class="tag mark p">${icon("loop")}Nochmal</div>` : ""}
       <div class="head ${q.sentence ? "sentence" : ""}">${q.head}${q.say ? sayBtn(vAudio(q.verb, 0), q.say) : ""}</div>
       <div class="sub">${q.sub}</div>
       <div id="extra"></div>
     </div>
     ${body}
     <div id="fb"></div>
-    ${q.rules ? `<details class="card rules" ${S.i === 0 ? "open" : ""}><summary>💡 Wann was, wann were?</summary>${RULES}</details>` : ""}`;
+    ${q.rules ? `<details class="rules" ${S.i === 0 ? "open" : ""}><summary>Wann was, wann were?${icon("plus")}</summary>${RULES}</details>` : ""}`;
   document.getElementById("quit").onclick = home;
 
   if (q.type === "input") {
@@ -812,11 +966,11 @@ function showQ() {
       const v = q.verb;
       e.target.remove();
       document.getElementById("extra").innerHTML = `<div class="forms">
-        <div><span>Simple Past</span><b>${disp(v[1])}</b>${sayBtn(vAudio(v, 1), v[1])}</div>
-        <div><span>Past Participle</span><b>${disp(v[2])}</b>${sayBtn(vAudio(v, 2), v[2])}</div></div>
+        <div><span>Simple Past (2. Form)</span><b class="mark swipe">${disp(v[1])}</b>${sayBtn(vAudio(v, 1), v[1])}</div>
+        <div><span>Past Participle (3. Form)</span><b class="mark swipe" style="animation-delay:.15s">${disp(v[2])}</b>${sayBtn(vAudio(v, 2), v[2])}</div></div>
         ${q.tip ? `<p class="muted" style="margin:12px 0 0">${q.tip}</p>` : ""}`;
       if (store.sound) play(q.audio, q.sayText);
-      document.getElementById("fb").innerHTML = `<div class="row" style="margin-top:12px">
+      document.getElementById("fb").innerHTML = `<div class="row" style="margin-top:24px">
         <button class="btn ghost" id="no">Nochmal üben</button><button class="btn" id="yes">Wusste ich!</button></div>`;
       document.getElementById("yes").onclick = () => { record(true); next(); };
       document.getElementById("no").onclick = () => { record(false); next(); };
@@ -843,10 +997,10 @@ function grade(ok) {
   const q = S.qs[S.i];
   record(ok);
   if (store.sound) play(q.audio, q.sayText);
-  const praise = ["Richtig! 🎉", "Super! ⭐", "Genau! 👍", "Perfekt! 💪"];
+  const praise = ["Richtig!", "Super!", "Genau!", "Perfekt!"];
   document.getElementById("fb").innerHTML = `
-    <div class="fb ${ok ? "ok" : "bad"}">${ok ? praise[Math.floor(Math.random() * praise.length)] : "Noch nicht ganz."}
-      <small>${q.solution} ${sayBtn(q.audio, q.sayText)}${!ok && q.tip ? "<br>" + q.tip : ""}</small></div>
+    <div class="fb ${ok ? "ok" : "bad"}"><span class="mark swipe ${ok ? "g" : "p"}">${ok ? praise[Math.floor(Math.random() * praise.length)] : "Noch nicht ganz."}</span>
+      <small>${q.solution} ${sayBtn(q.audio, q.sayText)}${!ok && q.tip ? `<span class="tip">${q.tip}</span>` : ""}</small></div>
     <button class="btn" id="next">${S.i + 1 < S.qs.length ? "Weiter" : "Ergebnis ansehen"}</button>`;
   const n = document.getElementById("next");
   n.onclick = next; n.focus();
@@ -860,16 +1014,12 @@ function next() {
 function result() {
   const total = S.total || S.qs.length, r = S.right;
   store.session = null; save();
-  const msg = r === total ? "Alles richtig – stark! 🏆" : r >= total * 0.7 ? "Richtig gut! ⭐" : r >= total * 0.4 ? "Schon ganz ordentlich – weiter so! 💪" : "Übung macht den Meister – gleich nochmal! 🌱";
+  const msg = r === total ? "Alles richtig – stark!" : r >= total * 0.7 ? "Richtig gut!" : r >= total * 0.4 ? "Schon ganz ordentlich – weiter so!" : "Übung macht den Meister – gleich nochmal!";
   app.innerHTML = `
-    <div class="card center">
-      <p class="score">${r} / ${total}</p>
-      <p><b>${msg}</b></p>
-    </div>
-    ${S.wrong.length ? `<div class="card"><h2>Das schaust du dir nochmal an</h2><ul class="miss">${S.wrong.map(w => `<li>${w}</li>`).join("")}</ul></div>` : ""}
-    <button class="btn" id="again">Nochmal</button>
-    <p></p>
-    <button class="btn ghost" id="home">Zur Übersicht</button>`;
+    <p class="score"><b class="mark swipe ${r >= total * 0.7 ? "g" : ""}">${r}&thinsp;/&thinsp;${total}</b></p>
+    <p class="center">${msg}</p>
+    ${S.wrong.length ? `<div class="miss-box"><h2>Das schaust du dir nochmal an</h2><ul class="miss">${S.wrong.map(w => `<li>${w}</li>`).join("")}</ul></div>` : ""}
+    <div class="row"><button class="btn ghost" id="home">Zur Übersicht</button><button class="btn" id="again">Nochmal</button></div>`;
   document.getElementById("again").onclick = () => start(S.mode);
   document.getElementById("home").onclick = home;
   window.scrollTo(0, 0);

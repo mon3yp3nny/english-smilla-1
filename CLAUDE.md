@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A single-file English trainer (irregular verbs and simple past) for a German-speaking school child, used mainly on an iPad as a home-screen web app. The whole app is `index.html`: inline CSS, inline vanilla JS, no dependencies, no build step, no tests, no linter.
+A single-file English trainer (irregular verbs and simple past) for a German-speaking school child, used mainly on an iPad as a home-screen web app. The whole app is `index.html`: inline CSS, inline vanilla JS, no dependencies, no build step, no tests, no linter. The only other runtime asset is the self-hosted font in `fonts/`. The visual system (squared paper, ink, highlighter colours as state) is recorded in `DESIGN.md`; product context in `PRODUCT.md`.
 
 UI text and code comments are in German; the content being taught is English. Keep that split, and keep the tone of UI strings child-friendly.
 
@@ -40,7 +40,7 @@ Missed questions are appended to the end of the running session with `retry: tru
 
 ### Persistence
 
-Everything lives in one `localStorage` entry (`KEY`): per-verb streaks in `store.p` (a verb counts as mastered at a streak of 2), per-verb miss counters in `store.m` (+1 per wrong answer, -1 per right one; with the streak they give the five colour levels in the verb list, see `level()`), the settings (including `store.sel`, the ticked verbs: all verb exercises and the read-all run use only these, or every verb when it is empty), and the entire in-progress session object `store.session`, which is restored on load so a reload resumes at the same question. Because the session is round-tripped through JSON, question objects must stay plain serializable data: no functions or DOM nodes, and `q.verb` is a copy after reload, not a reference into `VERBS`. Changing the shape of question objects can break a session saved by an older version.
+Everything lives in one `localStorage` entry (`KEY`): per-verb streaks in `store.p` (a verb counts as mastered at a streak of 2), per-verb miss counters in `store.m` (+1 per wrong answer, -1 per right one; with the streak they give the five colour levels in the verb list, see `level()`), the settings (including `store.theme` = `light`/`dark`/`auto`, and `store.sel`, the ticked verbs: all verb exercises and the read-all run use only these, or every verb when it is empty), and the entire in-progress session object `store.session`, which is restored on load so a reload resumes at the same question. Because the session is round-tripped through JSON, question objects must stay plain serializable data: no functions or DOM nodes, and `q.verb` is a copy after reload, not a reference into `VERBS`. Changing the shape of question objects can break a session saved by an older version.
 
 ### Version number
 

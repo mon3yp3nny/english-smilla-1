@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T00:00:00Z",
+  "title": "Design System: Englisch-Trainer",
+  "extensions": {
+    "colorMeta": {
+      "ink-navy":          { "role": "primary",   "displayName": "Ink Navy", "canonical": "#1d2433", "dark": "#e8ecf4", "cssVar": "--ink", "tonalRamp": ["#0e121a", "#1d2433", "#343d50", "#525b6d", "#7c8496", "#a8aebb", "#d3d7df", "#eef0f4"] },
+      "marker-yellow":     { "role": "secondary", "displayName": "Marker Yellow", "canonical": "#f6ea4f", "dark": "#ece052", "cssVar": "--hl-y", "tonalRamp": ["#3d3800", "#5e5700", "#857b00", "#ada100", "#d6c825", "#f6ea4f", "#faf29a", "#fdf9d6"] },
+      "marker-green":      { "role": "tertiary",  "displayName": "Marker Green", "canonical": "#86eeb4", "dark": "#74e0a6", "cssVar": "--hl-g", "tonalRamp": ["#00341a", "#0b5a33", "#0b7443", "#2fa266", "#5bcf8f", "#86eeb4", "#cdf8df", "#ebfdf2"] },
+      "marker-pink":       { "role": "tertiary",  "displayName": "Marker Pink", "canonical": "#ffa3c4", "dark": "#f29abb", "cssVar": "--hl-p", "tonalRamp": ["#45001a", "#7a0a35", "#b8124f", "#e0477f", "#ff94ba", "#ffa3c4", "#ffd6e5", "#fff0f5"] },
+      "right-ink":         { "role": "tertiary",  "displayName": "Right Ink", "canonical": "#0b7443", "dark": "#74e0a6", "cssVar": "--ok" },
+      "wrong-ink":         { "role": "tertiary",  "displayName": "Wrong Ink", "canonical": "#b8124f", "dark": "#f29abb", "cssVar": "--bad" },
+      "squared-paper":     { "role": "neutral",   "displayName": "Squared Paper", "canonical": "#f8f9fb", "dark": "#121722", "cssVar": "--paper" },
+      "grid-line":         { "role": "neutral",   "displayName": "Grid Line", "canonical": "#e2e7ef", "dark": "#1c2331", "cssVar": "--grid" },
+      "sheet-white":       { "role": "neutral",   "displayName": "Sheet White", "canonical": "#ffffff", "dark": "#182030", "cssVar": "--sheet" },
+      "pencil-grey":       { "role": "neutral",   "displayName": "Pencil Grey", "canonical": "#525b6d", "dark": "#a2abbd", "cssVar": "--muted" },
+      "hairline":          { "role": "neutral",   "displayName": "Hairline", "canonical": "#cdd3de", "dark": "#323c52", "cssVar": "--hair" },
+      "level-often-wrong": { "role": "neutral",   "displayName": "Level: oft falsch", "canonical": "#ff94ba", "dark": "#f29abb", "cssVar": "--lv-m2" },
+      "level-wrong":       { "role": "neutral",   "displayName": "Level: falsch", "canonical": "#ffd6e5", "dark": "rgba(242, 154, 187, .2)", "cssVar": "--lv-m1" },
+      "level-secure":      { "role": "neutral",   "displayName": "Level: sicher", "canonical": "#cdf8df", "dark": "rgba(116, 224, 166, .18)", "cssVar": "--lv-p1" },
+      "level-very-secure": { "role": "neutral",   "displayName": "Level: sehr sicher", "canonical": "#86eeb4", "dark": "#74e0a6", "cssVar": "--lv-p2" }
+    },
+    "typographyMeta": {
+      "display":     { "displayName": "Display", "purpose": "The two-line app title only." },
+      "numeral":     { "displayName": "Numeral", "purpose": "Mastered-verb count; result score runs larger at clamp(5rem, 22vw, 8rem)." },
+      "headline":    { "displayName": "Headline", "purpose": "Prompt word on a question screen; gap sentences use 600 at clamp(1.5rem, 5vw, 1.9rem)." },
+      "title":       { "displayName": "Title", "purpose": "Section headings above ruled lists; screen titles at 1.8rem." },
+      "row-title":   { "displayName": "Row Title", "purpose": "Name in a ruled list row." },
+      "body":        { "displayName": "Body", "purpose": "Running text; 20px from 700px viewport width." },
+      "label":       { "displayName": "Label", "purpose": "Field labels and form captions, pencil grey." },
+      "column-head": { "displayName": "Column Head", "purpose": "Uppercase verb-table column headers only." }
+    },
+    "shadows": [
+      { "name": "lift", "value": "0 12px 28px -14px rgba(29, 36, 51, .45)", "dark": "0 12px 28px -12px rgba(0, 0, 0, .7)", "purpose": "Floating pill controls over the scrolling verb table and the read-aloud stage only." },
+      { "name": "focus-marker", "value": "0 0 0 5px var(--hl-y)", "purpose": "Text field focus; other elements use outline: 5px solid var(--hl-y)." }
+    ],
+    "motion": [
+      { "name": "swipe", "value": ".55s cubic-bezier(.16, 1, .3, 1)", "purpose": "Highlighter swipe left to right; disabled under prefers-reduced-motion." },
+      { "name": "ease-out-expo", "value": "cubic-bezier(.16, 1, .3, 1)", "purpose": "Progress bar width (.4s), row arrow nudge (.2s), disclosure icon rotation (.25s)." },
+      { "name": "press", "value": "transform .12s ease-out", "purpose": "Press scale on buttons (.98), options (.97) and listen buttons (.92)." }
+    ],
+    "breakpoints": [
+      { "name": "narrow-strip", "value": "max-width: 499px", "purpose": "Level strip drops from 35 to 14 columns, cells 16px tall." },
+      { "name": "wide", "value": "min-width: 700px", "purpose": "Body 20px, column 700px with 40px side padding." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button", "kind": "button", "refersTo": "button-primary",
+      "description": "Ink-filled full-width action, 56px tall.",
+      "html": "<button class=\"ds-btn\">Weiter</button>",
+      "css": ".ds-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; padding: 14px 20px; border-radius: 12px; border: 2px solid var(--ink, #1d2433); background: var(--ink, #1d2433); color: var(--paper, #f8f9fb); font: 700 1.1rem \"Bricolage Grotesque\", system-ui, sans-serif; cursor: pointer; transition: transform .12s ease-out; } .ds-btn:active { transform: scale(.98); } .ds-btn:focus-visible { outline: 5px solid var(--hl-y, #f6ea4f); outline-offset: 0; }"
+    },
+    {
+      "name": "Ghost Button", "kind": "button", "refersTo": "button-ghost",
+      "description": "Secondary half of a button pair.",
+      "html": "<button class=\"ds-btn-ghost\">Nochmal üben</button>",
+      "css": ".ds-btn-ghost { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; padding: 14px 20px; border-radius: 12px; border: 2px solid var(--ink, #1d2433); background: transparent; color: var(--ink, #1d2433); font: 700 1.1rem \"Bricolage Grotesque\", system-ui, sans-serif; cursor: pointer; transition: transform .12s ease-out; } .ds-btn-ghost:active { transform: scale(.98); } .ds-btn-ghost:focus-visible { outline: 5px solid var(--hl-y, #f6ea4f); outline-offset: 0; }"
+    },
+    {
+      "name": "Ruled List Row", "kind": "nav", "refersTo": "list-row",
+      "description": "Drill menu row under a 2px ink rule; title gets the yellow marker on hover/press.",
+      "html": "<div class=\"ds-list\"><button class=\"ds-item\"><span><b>Karteikarten</b><span class=\"ds-sub\">Anschauen, aufdecken, merken</span></span><svg viewBox=\"0 0 24 24\" width=\"30\" height=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4.5 12h15M13.5 6l6 6-6 6\"/></svg></button></div>",
+      "css": ".ds-list { border-top: 2px solid var(--ink, #1d2433); font-family: \"Bricolage Grotesque\", system-ui, sans-serif; } .ds-item { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 72px; text-align: left; background: none; border: 0; border-bottom: 1.5px solid var(--ink, #1d2433); padding: 14px 4px; color: var(--ink, #1d2433); font: inherit; cursor: pointer; } .ds-item > span { flex: 1; } .ds-item b { font-size: 1.22rem; font-weight: 700; letter-spacing: -.015em; padding: 0 .16em; margin: 0 -.16em; border-radius: .14em .4em .2em .36em; transition: background-color .15s ease-out; } .ds-sub { display: block; color: var(--muted, #525b6d); font-size: .92rem; margin-top: 2px; } .ds-item svg { transition: transform .2s cubic-bezier(.16, 1, .3, 1); } .ds-item:hover b, .ds-item:focus-visible b, .ds-item:active b { background: var(--hl-y, #f6ea4f); color: var(--on-hl, #1d2433); } .ds-item:hover svg { transform: translateX(4px); } .ds-item:focus-visible { outline: 5px solid var(--hl-y, #f6ea4f); }"
+    },
+    {
+      "name": "Chip", "kind": "chip", "refersTo": "chip",
+      "description": "Quick-select group chip; selected takes marker yellow.",
+      "html": "<button class=\"ds-chip\">be – grow</button> <button class=\"ds-chip ds-on\">hang out – sleep</button>",
+      "css": ".ds-chip { min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 2px solid var(--ink, #1d2433); background: var(--sheet, #fff); color: var(--ink, #1d2433); font: 600 .92rem \"Bricolage Grotesque\", system-ui, sans-serif; cursor: pointer; } .ds-chip.ds-on { background: var(--hl-y, #f6ea4f); color: var(--on-hl, #1d2433); font-weight: 700; } .ds-chip:focus-visible { outline: 5px solid var(--hl-y, #f6ea4f); }"
+    },
+    {
+      "name": "Answer Option", "kind": "button", "refersTo": "answer-option",
+      "description": "Multiple-choice answer; graded green (right) or pink (wrong).",
+      "html": "<div class=\"ds-opts\"><button class=\"ds-opt ds-bad\">taked</button><button class=\"ds-opt\">taken</button><button class=\"ds-opt ds-ok\">took</button><button class=\"ds-opt\">let</button></div>",
+      "css": ".ds-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .ds-opt { min-height: 72px; padding: 16px 12px; border-radius: 12px; border: 2px solid var(--ink, #1d2433); background: var(--sheet, #fff); color: var(--ink, #1d2433); font: 700 1.2rem \"Bricolage Grotesque\", system-ui, sans-serif; cursor: pointer; transition: transform .12s ease-out; } .ds-opt:hover { background: var(--hl-y, #f6ea4f); color: var(--on-hl, #1d2433); } .ds-opt:active { transform: scale(.97); } .ds-opt:focus-visible { outline: 5px solid var(--hl-y, #f6ea4f); } .ds-opt.ds-ok { background: var(--hl-g, #86eeb4); color: var(--on-hl, #1d2433); } .ds-opt.ds-bad { background: var(--hl-p, #ffa3c4); color: var(--on-hl, #1d2433); }"
+    },
+    {
+      "name": "Text Field", "kind": "input", "refersTo": "text-field",
+      "description": "Answer field with label; yellow ring on focus.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-in\">Simple Past (2. Form)</label><input id=\"ds-in\" class=\"ds-input\" type=\"text\" placeholder=\"took\"></div>",
+      "css": ".ds-field { font-family: \"Bricolage Grotesque\", system-ui, sans-serif; } .ds-field label { display: block; font-size: .85rem; font-weight: 700; color: var(--muted, #525b6d); margin-bottom: 6px; } .ds-input { width: 100%; padding: 14px 16px; font: 600 1.3rem \"Bricolage Grotesque\", system-ui, sans-serif; color: var(--ink, #1d2433); background: var(--sheet, #fff); border: 2px solid var(--ink, #1d2433); border-radius: 12px; outline: none; transition: box-shadow .15s ease-out; } .ds-input:focus { box-shadow: 0 0 0 5px var(--hl-y, #f6ea4f); }"
+    },
+    {
+      "name": "Segmented Control", "kind": "custom", "refersTo": "segmented-active",
+      "description": "Theme switch; active segment is marker yellow.",
+      "html": "<div class=\"ds-seg\"><button>Hell</button><button>Dunkel</button><button aria-pressed=\"true\">Wie das Gerät</button></div>",
+      "css": ".ds-seg { display: inline-flex; border: 2px solid var(--ink, #1d2433); border-radius: 10px; overflow: hidden; } .ds-seg button { border: 0; background: var(--sheet, #fff); color: var(--ink, #1d2433); padding: 10px 14px; min-height: 44px; font: 600 .95rem \"Bricolage Grotesque\", system-ui, sans-serif; cursor: pointer; } .ds-seg button + button { border-left: 2px solid var(--ink, #1d2433); } .ds-seg button[aria-pressed=\"true\"] { background: var(--hl-y, #f6ea4f); color: var(--on-hl, #1d2433); font-weight: 700; } .ds-seg button:focus-visible { outline: 5px solid var(--hl-y, #f6ea4f); outline-offset: -5px; }"
+    },
+    {
+      "name": "Highlighter Swipe", "kind": "custom", "refersTo": null,
+      "description": "Signature: marker stroke drawn left to right behind a word on right answers, solutions and the line read aloud.",
+      "html": "<p class=\"ds-fb\"><span class=\"ds-mark ds-swipe\">Richtig!</span> <span class=\"ds-mark ds-p ds-swipe\">Noch nicht ganz.</span></p>",
+      "css": ".ds-fb { font: 800 1.35rem \"Bricolage Grotesque\", system-ui, sans-serif; color: var(--ink, #1d2433); } .ds-mark { --mk: var(--hl-g, #86eeb4); color: var(--on-hl, #1d2433); background: linear-gradient(var(--mk), var(--mk)) no-repeat 0 72% / 100% 80%; padding: 0 .14em; margin: 0 -.04em; border-radius: .06em .22em .1em .18em; -webkit-box-decoration-break: clone; box-decoration-break: clone; } .ds-mark.ds-p { --mk: var(--hl-p, #ffa3c4); } .ds-swipe { animation: ds-swipe .55s cubic-bezier(.16, 1, .3, 1) both; } .ds-swipe:hover { animation-name: ds-swipe2; } @keyframes ds-swipe { from { background-size: 0 80%; color: var(--ink, #1d2433); } 40% { color: var(--on-hl, #1d2433); } to { background-size: 100% 80%; } } @keyframes ds-swipe2 { from { background-size: 0 80%; } to { background-size: 100% 80%; } } @media (prefers-reduced-motion: reduce) { .ds-swipe { animation: none; } }"
+    },
+    {
+      "name": "Listen Button", "kind": "button", "refersTo": "listen-button",
+      "description": "44px ink-outlined circle with a speaker line icon.",
+      "html": "<button class=\"ds-say\" aria-label=\"Anhören\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 9.5h3.5L12 5.5v13l-4.5-4H4z\"/><path d=\"M15.5 9a4.2 4.2 0 0 1 0 6M18.3 6.5a8 8 0 0 1 0 11\"/></svg></button>",
+      "css": ".ds-say { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 2px solid var(--ink, #1d2433); border-radius: 50%; background: var(--sheet, #fff); color: var(--ink, #1d2433); cursor: pointer; transition: transform .12s ease-out; } .ds-say:active { transform: scale(.92); background: var(--hl-y, #f6ea4f); color: var(--on-hl, #1d2433); } .ds-say:focus-visible { outline: 5px solid var(--hl-y, #f6ea4f); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Heft & Textmarker",
+    "overview": "The app is the student's own exercise book. The page is fine squared paper, everything is written in one fineliner ink (a deep navy), and colour appears only where a highlighter would go: on the current thing, on the right answer, on the wrong one. Structure comes from ruled lines and inked boxes, never from tinted cards. The result reads grown-up and calm for a 12+ learner while staying warm, because the highlighter swipe is the one gesture that moves.\n\nDensity is relaxed: one question per screen, ruled rows of at least 72px, generous touch targets (44px minimum everywhere, 56px for primary actions) for an iPad held in the hand. Type does the hierarchy work through weight and size inside one family, Bricolage Grotesque, from an 800-weight tightly tracked display down to a 400 body.\n\nDark mode is the same notebook under a desk lamp at night: navy paper, light ink, and the highlighters keep dark ink on top so a marked word always reads as a marked word.",
+    "keyCharacteristics": [
+      "Squared-paper background (24px grid) on every full screen, including the full-screen read-aloud stage.",
+      "One ink colour for type, rules, borders and the primary button.",
+      "Highlighter yellow, green and pink are state colours only.",
+      "Ruled lists (2px top rule, 1.5px row rules) instead of cards.",
+      "The highlighter swipe, animated left to right, marks the right answer, solutions and the line being read aloud."
+    ],
+    "rules": [
+      { "name": "The Marker Means Something Rule", "body": "Yellow is current or selected, green is right, pink is wrong. A marker colour never appears without that meaning, and never as a background for a section or card.", "section": "colors" },
+      { "name": "The Dark Ink On Markers Rule", "body": "Text on any full-strength marker is always on-highlight ink (#1d2433 light, #121722 dark), in both themes.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "Hierarchy comes from weight (400 / 600 / 700 / 800) and size inside Bricolage Grotesque. No second family.", "section": "typography" },
+      { "name": "The Tight Big Type Rule", "body": "Anything 1.5rem and up is set 800 with negative tracking (-0.025em to -0.04em); counts and scores use tabular numerals.", "section": "typography" },
+      { "name": "The Drawn Not Cast Rule", "body": "Separation comes from ink lines and borders. A shadow is reserved for controls that float over scrolling content.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do set every full screen on the squared-paper grid (24px, grid-line colour).",
+      "Do draw structure with ink: 2px borders on interactive boxes, a 2px top rule and 1.5px row rules on lists.",
+      "Do keep text on full-strength markers in on-highlight ink, in both themes.",
+      "Do use the highlighter swipe for a right answer, a revealed solution or the line being read, and respect reduced motion.",
+      "Do keep touch targets at 44px minimum and primary actions at 56px.",
+      "Do define every new colour in both light and dark token sets."
+    ],
+    "donts": [
+      "Don't use marker yellow, green or pink as decoration or as a section background; each means current, right or wrong.",
+      "Don't wrap drills or content in tinted, shadowed cards; use ruled rows.",
+      "Don't add shadows to anything that does not float over scrolling content.",
+      "Don't introduce a second typeface or emoji tiles and mascots inside the interface.",
+      "Don't use icon fonts or glyph characters as icons; add a line SVG to the inline set."
+    ]
+  }
+}
