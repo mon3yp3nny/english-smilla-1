@@ -180,6 +180,13 @@
     transition: box-shadow .15s ease-out;
   }
   input[type=text]:focus { box-shadow: 0 0 0 5px var(--hl-y); }
+  #exportBox { margin: 18px 0 0; }
+  #exportText {
+    display: block; width: 100%; padding: 14px 16px; font: inherit; font-size: 1rem; line-height: 1.4; color: var(--ink);
+    background: var(--sheet); border: 2px solid var(--ink); border-radius: 12px; outline: none; resize: vertical;
+    overflow-wrap: anywhere; transition: box-shadow .15s ease-out;
+  }
+  #exportText:focus { box-shadow: 0 0 0 5px var(--hl-y); }
   input.ok { border-color: var(--ok); background: var(--lv-p1); box-shadow: none !important; }
   input.bad { border-color: var(--bad); background: var(--lv-m1); box-shadow: none !important; }
   .fix { color: var(--bad); font-size: .95rem; font-weight: 600; margin-top: 6px; }
@@ -494,7 +501,7 @@ const example = v => {
   return [v[0] === "be" ? "am" : f(0), f(1), "have " + f(2)].map(t => "I " + t);
 };
 
-const VERSION = 21;
+const VERSION = 22;
 const SESSION_LEN = 10;
 const KEY = "irregular-verbs-v1";
 
@@ -511,6 +518,14 @@ delete store.range;
 if (store.sound === undefined) store.sound = true;
 if (!["light", "dark"].includes(store.theme)) store.theme = "auto";   // Aussehen: hell, dunkel oder wie das Gerät
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+// Text für die neue Hausaufgaben-App (Import dort): nur Fortschritt, Fehlerzähler, angekreuzte Verben und die
+// 3.-Form-Einstellung. Bewusst ohne session, range, theme und sound – die laufende Runde wird nicht übertragen.
+function exportText() {
+  return JSON.stringify({
+    app: "english-smilla-1", exportVersion: 1, key: KEY, exportedAt: new Date().toISOString(),
+    data: { p: store.p, m: store.m, sel: store.sel, pp: store.pp }
+  });
+}
 // Bittet den Browser, den Fortschritt auch bei wenig Speicherplatz nicht zu löschen
 try { navigator.storage.persist().catch(() => {}); } catch (e) {}
 
@@ -636,6 +651,12 @@ function home() {
       <label class="check"><input type="checkbox" id="pp" ${store.pp ? "checked" : ""}> Beim Schreiben auch die 3. Form (past participle) abfragen</label>
       <label class="check"><input type="checkbox" id="sound" ${store.sound ? "checked" : ""}> Lösung nach jeder Antwort vorlesen</label>
       <div class="seg-row"><span id="themeLabel">Aussehen</span><div class="seg" role="group" aria-labelledby="themeLabel">${themes.map(([t, name]) => `<button data-theme-pick="${t}" aria-pressed="${store.theme === t}">${name}</button>`).join("")}</div></div>
+      ${item(["", "Fortschritt exportieren", "Kopiert deinen Stand für die neue Hausaufgaben-App."], 'id="export"')}
+    </div>
+    <div class="field" id="exportBox" hidden>
+      <label for="exportText">Text zum Kopieren</label>
+      <textarea id="exportText" rows="6" readonly autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+      <p class="muted" id="exportStatus" role="status"></p>
     </div>
     <div class="foot">
       <button class="link" id="reset">Fortschritt zurücksetzen</button>
@@ -652,6 +673,20 @@ function home() {
     store.theme = b.dataset.themePick; save(); applyTheme();
     app.querySelectorAll("[data-theme-pick]").forEach(o => o.setAttribute("aria-pressed", o === b));
   });
+  document.getElementById("export").onclick = () => {
+    const box = document.getElementById("exportBox"), ta = document.getElementById("exportText"), st = document.getElementById("exportStatus");
+    const manual = "Markiere den Text unten und kopiere ihn.";
+    ta.value = exportText();          // nur über .value, nie als HTML
+    box.hidden = false;
+    ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);   // iOS markiert sonst nicht alles
+    // Das Kopieren muss direkt im Tipp passieren; klappt es nicht, bleibt das markierte Textfeld zum Selbstkopieren
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      st.textContent = "";
+      navigator.clipboard.writeText(ta.value).then(
+        () => { st.textContent = "Kopiert. Öffne jetzt die Hausaufgaben-App und füge den Text dort ein."; },
+        () => { st.textContent = manual; });
+    } else st.textContent = manual;
+  };
   document.getElementById("reload").onclick = () => location.reload();
   document.getElementById("reset").onclick = () => { if (confirm("Wirklich den ganzen Fortschritt löschen?")) { store.p = {}; store.m = {}; save(); home(); } };
   window.scrollTo(0, 0);
